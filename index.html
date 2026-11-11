@@ -85,8 +85,20 @@
       -webkit-overflow-scrolling: touch;
     }
 
+    /* Extra top offset on mobile so the header sits slightly lower below the notch/status bar */
     #app-top-header {
-      padding-top: env(safe-area-inset-top, 0px);
+      padding-top: calc(env(safe-area-inset-top, 0px) + 14px);
+    }
+    @media (min-width: 640px) {
+      #app-top-header {
+        padding-top: 0px;
+      }
+    }
+
+    /* Mobile Touch Optimization */
+    button, a, select, label, input[type="checkbox"] {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
     }
 
     ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -96,8 +108,8 @@
 
     input[type="checkbox"] {
       accent-color: #60a5fa;
-      width: 18px;
-      height: 18px;
+      width: 22px;
+      height: 22px;
       cursor: pointer;
     }
 
@@ -120,36 +132,36 @@
 
   <!-- HEADER -->
   <header id="app-top-header" class="border-b border-border bg-bg z-20 shrink-0">
-    <div class="max-w-3xl mx-auto px-2.5 sm:px-6 pt-2.5 sm:pt-4 pb-1.5 sm:pb-3">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-3 mb-1.5 sm:mb-3">
+    <div class="max-w-3xl mx-auto px-3 sm:px-6 pt-3 sm:pt-4 pb-2 sm:pb-3">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 mb-2 sm:mb-3">
         <div class="flex items-center justify-between sm:block">
           <div class="flex items-center gap-2">
             <span id="sheet-sync-dot" class="w-2 h-2 rounded-full bg-pastel shadow-[0_0_8px_#60a5fa] shrink-0"></span>
-            <h1 class="text-sm sm:text-lg font-semibold tracking-tight text-zinc-100">Meal Planner</h1>
+            <h1 class="text-base sm:text-lg font-semibold tracking-tight text-zinc-100">Meal Planner</h1>
             <a 
               href="https://docs.google.com/spreadsheets/d/1zuT4zofhScDDQmFQYX_KSWkohAa5kAQ2O2DRK98n4wI/edit" 
               target="_blank" 
               rel="noopener noreferrer"
-              class="text-[10px] sm:text-[11px] font-mono px-1.5 py-0.5 rounded bg-pastel-dim text-pastel-light border border-pastel-border hover:bg-pastel/20 transition"
+              class="min-h-[32px] inline-flex items-center text-[11px] font-mono px-2.5 py-1 rounded-lg bg-pastel-dim text-pastel-light border border-pastel-border hover:bg-pastel/20 transition"
             >
               ↗ Sheet
             </a>
             <button
               id="btn-theme-toggle"
               onclick="toggleThemeMode()"
-              class="text-[10px] sm:text-[11px] font-mono px-1.5 py-0.5 rounded bg-card border border-border text-zinc-400 hover:text-pastel-light transition"
-              title="Switch between Dark and Light mode to match your phone's status bar"
+              class="min-h-[32px] min-w-[34px] inline-flex items-center justify-center text-xs font-mono px-2 py-1 rounded-lg bg-card border border-border text-zinc-400 hover:text-pastel-light transition"
+              title="Switch between Dark and Light mode"
             >
               🌙
             </button>
           </div>
-          <p id="sheet-sync-status" class="text-[10px] sm:text-xs text-zinc-500 sm:mt-0.5 sm:pl-4 truncate max-w-[145px] sm:max-w-none">Saved in browser</p>
+          <p id="sheet-sync-status" class="text-[10px] sm:text-xs text-zinc-500 sm:mt-0.5 sm:pl-4 truncate max-w-[140px] sm:max-w-none">Auto-syncs every 30s</p>
         </div>
 
-        <div class="grid grid-cols-3 sm:flex items-center gap-1.5 sm:gap-2">
+        <div class="grid grid-cols-3 sm:flex items-center gap-2">
           <button 
-            onclick="pullRecipesFromSheet()" 
-            class="px-2 sm:px-3 py-1.5 rounded-lg bg-card border border-border hover:border-pastel-border text-zinc-300 hover:text-pastel-light font-medium text-[11px] sm:text-xs transition text-center truncate"
+            onclick="pullRecipesFromSheet(false)" 
+            class="min-h-[40px] sm:min-h-0 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-lg bg-card border border-border hover:border-pastel-border text-zinc-300 hover:text-pastel-light font-medium text-xs transition text-center truncate"
             title="Fetch latest edits from your Google Sheet"
           >
             ↻ Sync
@@ -157,36 +169,36 @@
           <button 
             id="btn-email-plan"
             onclick="emailWeeklyPlan()" 
-            class="px-2 sm:px-3 py-1.5 rounded-lg bg-pastel-dim border border-pastel-border hover:bg-pastel/20 text-pastel-light font-semibold text-[11px] sm:text-xs transition text-center truncate"
+            class="min-h-[40px] sm:min-h-0 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-lg bg-pastel-dim border border-pastel-border hover:bg-pastel/20 text-pastel-light font-semibold text-xs transition text-center truncate"
             title="Save to History & email this week's schedule, grocery list, and Sunday prep to yourself"
           >
             ✉ Email Plan
           </button>
           <button 
             onclick="randomizeWeek()" 
-            class="px-2 sm:px-3.5 py-1.5 rounded-lg bg-pastel hover:bg-pastel-light text-zinc-950 font-semibold text-[11px] sm:text-xs transition shadow-sm active:scale-[0.99] text-center truncate"
+            class="min-h-[40px] sm:min-h-0 px-2.5 sm:px-3.5 py-2 sm:py-1.5 rounded-lg bg-pastel hover:bg-pastel-light text-zinc-950 font-semibold text-xs transition shadow-sm active:scale-[0.99] text-center truncate"
           >
             ↻ Shuffle
           </button>
         </div>
       </div>
 
-      <!-- 5 NAVIGATION TABS -->
-      <nav class="grid grid-cols-5 sm:flex items-center gap-1 sm:gap-2">
-        <button id="tab-btn-planner" onclick="switchTab('planner')" class="px-1 sm:px-3.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-medium transition border bg-pastel-dim text-pastel-light border-pastel-border flex items-center justify-center gap-1">Plan</button>
-        <button id="tab-btn-grocery" onclick="switchTab('grocery')" class="px-1 sm:px-3.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-medium transition border border-transparent text-zinc-400 hover:text-zinc-200 flex items-center justify-center gap-1">
+      <!-- 5 NAVIGATION TABS (Larger Touch Targets on Mobile) -->
+      <nav class="grid grid-cols-5 sm:flex items-center gap-1.5 sm:gap-2">
+        <button id="tab-btn-planner" onclick="switchTab('planner')" class="min-h-[40px] sm:min-h-0 px-1.5 sm:px-3.5 py-2 sm:py-1.5 rounded-lg text-xs font-medium transition border bg-pastel-dim text-pastel-light border-pastel-border flex items-center justify-center gap-1">Plan</button>
+        <button id="tab-btn-grocery" onclick="switchTab('grocery')" class="min-h-[40px] sm:min-h-0 px-1.5 sm:px-3.5 py-2 sm:py-1.5 rounded-lg text-xs font-medium transition border border-transparent text-zinc-400 hover:text-zinc-200 flex items-center justify-center gap-1">
           <span>Groceries</span>
           <span id="grocery-count-badge" class="hidden sm:inline-block text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-300">0/0</span>
         </button>
-        <button id="tab-btn-prep" onclick="switchTab('prep')" class="px-1 sm:px-3.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-medium transition border border-transparent text-zinc-400 hover:text-zinc-200 flex items-center justify-center gap-1">
+        <button id="tab-btn-prep" onclick="switchTab('prep')" class="min-h-[40px] sm:min-h-0 px-1.5 sm:px-3.5 py-2 sm:py-1.5 rounded-lg text-xs font-medium transition border border-transparent text-zinc-400 hover:text-zinc-200 flex items-center justify-center gap-1">
           <span>Prep</span>
           <span id="prep-count-badge" class="hidden sm:inline-block text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-300">0/0</span>
         </button>
-        <button id="tab-btn-recipes" onclick="switchTab('recipes')" class="px-1 sm:px-3.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-medium transition border border-transparent text-zinc-400 hover:text-zinc-200 flex items-center justify-center gap-1">
+        <button id="tab-btn-recipes" onclick="switchTab('recipes')" class="min-h-[40px] sm:min-h-0 px-1.5 sm:px-3.5 py-2 sm:py-1.5 rounded-lg text-xs font-medium transition border border-transparent text-zinc-400 hover:text-zinc-200 flex items-center justify-center gap-1">
           <span>Recipes</span>
           <span id="recipes-count-badge" class="hidden sm:inline-block text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-300">10</span>
         </button>
-        <button id="tab-btn-history" onclick="switchTab('history')" class="px-1 sm:px-3.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-medium transition border border-transparent text-zinc-400 hover:text-zinc-200 flex items-center justify-center gap-1">
+        <button id="tab-btn-history" onclick="switchTab('history')" class="min-h-[40px] sm:min-h-0 px-1.5 sm:px-3.5 py-2 sm:py-1.5 rounded-lg text-xs font-medium transition border border-transparent text-zinc-400 hover:text-zinc-200 flex items-center justify-center gap-1">
           <span>History</span>
           <span id="history-count-badge" class="text-[10px] font-mono px-1 py-0.2 rounded bg-zinc-800 text-zinc-300">0</span>
         </button>
@@ -196,33 +208,33 @@
 
   <!-- MAIN CONTENT -->
   <main id="main-scroll-container" class="flex-1 w-full overflow-y-auto bg-bg">
-    <div class="min-h-[calc(100%+1px)] max-w-3xl w-full mx-auto px-2.5 sm:px-6 pt-2.5 sm:pt-5 pb-28 sm:pb-32 space-y-3 sm:space-y-4">
+    <div class="min-h-[calc(100%+1px)] max-w-3xl w-full mx-auto px-3 sm:px-6 pt-3 sm:pt-5 pb-28 sm:pb-32 space-y-3 sm:space-y-4">
 
     <!-- 1. PLANNER TAB -->
-    <section id="view-planner" class="space-y-2.5 sm:space-y-4">
-      <div class="bg-card border border-border rounded-xl p-2.5 sm:p-3.5 space-y-2 sm:space-y-0 sm:flex sm:flex-wrap sm:items-center sm:justify-between gap-2.5">
+    <section id="view-planner" class="space-y-3 sm:space-y-4">
+      <div class="bg-card border border-border rounded-xl p-3 sm:p-3.5 space-y-2.5 sm:space-y-0 sm:flex sm:flex-wrap sm:items-center sm:justify-between gap-2.5">
         <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-4">
-          <div class="flex items-center justify-between sm:justify-start gap-2 bg-bg/50 sm:bg-transparent px-2 py-1 sm:p-0 rounded-lg border border-border/60 sm:border-none">
+          <div class="flex items-center justify-between sm:justify-start gap-2 bg-bg/50 sm:bg-transparent px-2.5 py-1.5 sm:p-0 rounded-lg border border-border/60 sm:border-none">
             <span class="text-xs text-zinc-400 font-medium">People:</span>
             <div class="flex items-center bg-bg border border-border rounded-lg overflow-hidden">
-              <button onclick="adjustPeople(-1)" class="px-2.5 py-1 text-xs text-zinc-300 hover:text-zinc-100">−</button>
-              <span id="people-count-display" class="px-2 py-0.5 text-xs font-mono font-semibold text-pastel-light">2</span>
-              <button onclick="adjustPeople(1)" class="px-2.5 py-1 text-xs text-zinc-300 hover:text-zinc-100">+</button>
+              <button onclick="adjustPeople(-1)" class="min-w-[36px] min-h-[34px] flex items-center justify-center text-sm font-bold text-zinc-300 hover:text-zinc-100 active:bg-zinc-800">−</button>
+              <span id="people-count-display" class="px-2.5 py-0.5 text-xs font-mono font-semibold text-pastel-light">2</span>
+              <button onclick="adjustPeople(1)" class="min-w-[36px] min-h-[34px] flex items-center justify-center text-sm font-bold text-zinc-300 hover:text-zinc-100 active:bg-zinc-800">+</button>
             </div>
           </div>
 
-          <div class="flex items-center justify-between sm:justify-start gap-2 bg-bg/50 sm:bg-transparent px-2 py-1 sm:p-0 rounded-lg border border-border/60 sm:border-none">
+          <div class="flex items-center justify-between sm:justify-start gap-2 bg-bg/50 sm:bg-transparent px-2.5 py-1.5 sm:p-0 rounded-lg border border-border/60 sm:border-none">
             <span class="text-xs text-zinc-400 font-medium">Days:</span>
             <div class="flex items-center bg-bg border border-border rounded-lg overflow-hidden">
-              <button onclick="adjustDays(-1)" class="px-2.5 py-1 text-xs text-zinc-300 hover:text-zinc-100">−</button>
-              <span id="days-count-display" class="px-2 py-0.5 text-xs font-mono font-semibold text-pastel-light">5</span>
-              <button onclick="adjustDays(1)" class="px-2.5 py-1 text-xs text-zinc-300 hover:text-zinc-100">+</button>
+              <button onclick="adjustDays(-1)" class="min-w-[36px] min-h-[34px] flex items-center justify-center text-sm font-bold text-zinc-300 hover:text-zinc-100 active:bg-zinc-800">−</button>
+              <span id="days-count-display" class="px-2.5 py-0.5 text-xs font-mono font-semibold text-pastel-light">5</span>
+              <button onclick="adjustDays(1)" class="min-w-[36px] min-h-[34px] flex items-center justify-center text-sm font-bold text-zinc-300 hover:text-zinc-100 active:bg-zinc-800">+</button>
             </div>
           </div>
 
-          <div class="col-span-2 sm:col-span-1 flex items-center justify-between sm:justify-start gap-2 bg-bg/50 sm:bg-transparent px-2 py-1 sm:p-0 rounded-lg border border-border/60 sm:border-none">
+          <div class="col-span-2 sm:col-span-1 flex items-center justify-between sm:justify-start gap-2 bg-bg/50 sm:bg-transparent px-2.5 py-1.5 sm:p-0 rounded-lg border border-border/60 sm:border-none">
             <span class="text-xs text-zinc-400 font-medium">⏱️ Max Time:</span>
-            <select id="select-max-cook-time" onchange="setMaxCookTime(this.value)" class="px-2 py-1 rounded-lg bg-bg border border-border text-xs font-mono font-semibold text-pastel-light focus:outline-none focus:border-pastel cursor-pointer">
+            <select id="select-max-cook-time" onchange="setMaxCookTime(this.value)" class="min-h-[34px] px-2.5 py-1 rounded-lg bg-bg border border-border text-xs font-mono font-semibold text-pastel-light focus:outline-none focus:border-pastel cursor-pointer">
               <option value="0">Any Time</option>
               <option value="20">≤ 20 mins</option>
               <option value="30">≤ 30 mins</option>
@@ -232,15 +244,15 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-3 sm:flex sm:flex-wrap items-center gap-1.5 sm:gap-2 pt-1.5 sm:pt-0 border-t border-border/60 sm:border-none">
-          <button id="btn-fridge-drawer" onclick="toggleFridgeDrawer()" class="justify-center px-2 sm:px-3 py-1.5 rounded-lg border border-border bg-bg text-zinc-300 hover:text-pastel-light text-[11px] sm:text-xs font-medium transition flex items-center gap-1 truncate">
+        <div class="grid grid-cols-3 sm:flex sm:flex-wrap items-center gap-2 pt-2 sm:pt-0 border-t border-border/60 sm:border-none">
+          <button id="btn-fridge-drawer" onclick="toggleFridgeDrawer()" class="min-h-[38px] sm:min-h-0 justify-center px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-lg border border-border bg-bg text-zinc-300 hover:text-pastel-light text-xs font-medium transition flex items-center gap-1 truncate">
             <span>❄️ Fridge</span>
           </button>
-          <button id="btn-balanced-shuffle" onclick="toggleBalancedVariety()" class="justify-center px-2 sm:px-3 py-1.5 rounded-lg border text-[11px] sm:text-xs font-medium transition flex items-center gap-1 truncate">
+          <button id="btn-balanced-shuffle" onclick="toggleBalancedVariety()" class="min-h-[38px] sm:min-h-0 justify-center px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-lg border text-xs font-medium transition flex items-center gap-1 truncate">
             <span id="balanced-shuffle-dot" class="w-1.5 h-1.5 rounded-full bg-pastel shrink-0"></span>
             <span id="balanced-shuffle-label" class="truncate">⚖️ Variety</span>
           </button>
-          <button id="btn-double-day" onclick="toggleDoubleDayCooking()" class="justify-center px-2 sm:px-3 py-1.5 rounded-lg border text-[11px] sm:text-xs font-medium transition flex items-center gap-1 truncate">
+          <button id="btn-double-day" onclick="toggleDoubleDayCooking()" class="min-h-[38px] sm:min-h-0 justify-center px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-lg border text-xs font-medium transition flex items-center gap-1 truncate">
             <span id="double-day-dot" class="w-1.5 h-1.5 rounded-full bg-pastel shrink-0"></span>
             <span id="double-day-label" class="truncate">2-Night: ON</span>
           </button>
@@ -253,42 +265,42 @@
             <h3 class="text-xs font-semibold text-pastel-light">❄️ Use What I Have (Fridge / Pantry Cleanout)</h3>
             <p class="text-[11px] text-zinc-400">Type ingredients on hand (e.g., <span class="text-zinc-300 font-mono">spinach, chicken</span>).</p>
           </div>
-          <button onclick="clearFridgeQuery()" class="text-[11px] text-zinc-400 hover:text-pastel-light transition shrink-0">Clear</button>
+          <button onclick="clearFridgeQuery()" class="min-h-[34px] px-2.5 text-xs text-zinc-400 hover:text-pastel-light transition shrink-0">Clear</button>
         </div>
-        <input id="input-fridge-search" type="text" placeholder="Search ingredients on hand..." oninput="updateFridgeSearch(this.value)" class="w-full px-3 py-1.5 rounded-lg bg-bg border border-border text-xs text-zinc-100 focus:outline-none focus:border-pastel">
+        <input id="input-fridge-search" type="text" placeholder="Search ingredients on hand..." oninput="updateFridgeSearch(this.value)" class="w-full min-h-[40px] px-3 py-2 rounded-lg bg-bg border border-border text-xs text-zinc-100 focus:outline-none focus:border-pastel">
         <div id="fridge-matches-container" class="space-y-1.5 max-h-56 overflow-y-auto pr-1"></div>
       </div>
 
-      <div id="planner-days-container" class="space-y-2"></div>
+      <div id="planner-days-container" class="space-y-2.5"></div>
     </section>
 
     <!-- 2. GROCERY TAB -->
     <section id="view-grocery" class="hidden space-y-3">
-      <div class="bg-card border border-border rounded-xl p-3 sm:p-4 space-y-2.5">
+      <div class="bg-card border border-border rounded-xl p-3 sm:p-4 space-y-3">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           <div>
             <h2 class="text-sm font-semibold text-zinc-100">Weekly Grocery List</h2>
             <p id="grocery-subtitle" class="text-[11px] text-zinc-400">Scaled & consolidated for your household.</p>
           </div>
-          <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-1.5 w-full sm:w-auto">
-            <button id="btn-toggle-staples" onclick="toggleHidePantryStaples()" class="justify-center px-2.5 py-1.5 rounded-lg border text-xs font-medium transition flex items-center gap-1.5">
+          <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full sm:w-auto">
+            <button id="btn-toggle-staples" onclick="toggleHidePantryStaples()" class="min-h-[40px] sm:min-h-0 justify-center px-3 py-2 sm:py-1.5 rounded-lg border text-xs font-medium transition flex items-center gap-1.5">
               <span id="staples-filter-dot" class="w-2 h-2 rounded-full bg-pastel shrink-0"></span>
               <span id="staples-filter-label">Hide Staples: ON</span>
             </button>
-            <button onclick="togglePantryDrawer()" class="justify-center px-2.5 py-1.5 rounded-lg bg-bg border border-border hover:border-pastel-border text-zinc-300 hover:text-pastel-light text-xs font-medium transition">
+            <button onclick="togglePantryDrawer()" class="min-h-[40px] sm:min-h-0 justify-center px-3 py-2 sm:py-1.5 rounded-lg bg-bg border border-border hover:border-pastel-border text-zinc-300 hover:text-pastel-light text-xs font-medium transition">
               🥫 Staples (<span id="staples-count-badge">0</span>)
             </button>
-            <button onclick="copyGroceryList()" class="justify-center px-2.5 py-1.5 rounded-lg bg-bg border border-border hover:border-pastel-border text-zinc-300 hover:text-pastel-light text-xs font-medium transition">📋 Copy List</button>
-            <button onclick="uncheckAllGroceries()" class="justify-center px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-400 hover:text-zinc-200 text-xs transition">Reset Checks</button>
+            <button onclick="copyGroceryList()" class="min-h-[40px] sm:min-h-0 justify-center px-3 py-2 sm:py-1.5 rounded-lg bg-bg border border-border hover:border-pastel-border text-zinc-300 hover:text-pastel-light text-xs font-medium transition">📋 Copy List</button>
+            <button onclick="uncheckAllGroceries()" class="min-h-[40px] sm:min-h-0 justify-center px-3 py-2 sm:py-1.5 rounded-lg bg-bg border border-border text-zinc-400 hover:text-zinc-200 text-xs transition">Reset Checks</button>
           </div>
         </div>
 
         <div class="pt-2.5 border-t border-border/80 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-          <div class="flex-1 flex items-center gap-1.5">
-            <input id="input-extra-grocery" type="text" placeholder="🛒 Quick-add extra item (Milk, Coffee)..." onkeydown="if(event.key==='Enter') addExtraGroceryItem()" class="flex-1 px-3 py-1.5 rounded-lg bg-bg border border-border text-xs text-zinc-100 focus:outline-none focus:border-pastel">
-            <button onclick="addExtraGroceryItem()" class="px-3 py-1.5 rounded-lg bg-pastel hover:bg-pastel-light text-zinc-950 font-semibold text-xs transition shrink-0">+ Add</button>
+          <div class="flex-1 flex items-center gap-2">
+            <input id="input-extra-grocery" type="text" placeholder="🛒 Quick-add extra item (Milk, Coffee)..." onkeydown="if(event.key==='Enter') addExtraGroceryItem()" class="flex-1 min-h-[40px] px-3 py-2 rounded-lg bg-bg border border-border text-xs text-zinc-100 focus:outline-none focus:border-pastel">
+            <button onclick="addExtraGroceryItem()" class="min-h-[40px] px-4 py-2 rounded-lg bg-pastel hover:bg-pastel-light text-zinc-950 font-semibold text-xs transition shrink-0">+ Add</button>
           </div>
-          <button id="btn-clear-extras" onclick="clearExtraGroceryItems()" class="hidden px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-400 hover:text-red-400 text-[11px] transition shrink-0">Clear Extras (<span id="extra-items-count">0</span>)</button>
+          <button id="btn-clear-extras" onclick="clearExtraGroceryItems()" class="hidden min-h-[38px] px-3 py-1.5 rounded-lg bg-bg border border-border text-zinc-400 hover:text-red-400 text-xs transition shrink-0">Clear Extras (<span id="extra-items-count">0</span>)</button>
         </div>
 
         <div id="pantry-staples-drawer" class="hidden pt-2.5 border-t border-border/80 space-y-2.5">
@@ -297,21 +309,21 @@
               <h3 class="text-xs font-semibold text-pastel-light">🥫 Staple Pantry Items</h3>
               <p class="text-[10px] text-zinc-400">Saved automatically to your browser & Google Sheet.</p>
             </div>
-            <button onclick="resetDefaultStaples()" class="text-[11px] text-zinc-400 hover:text-pastel-light transition">↺ Restore Defaults</button>
+            <button onclick="resetDefaultStaples()" class="min-h-[34px] px-2 text-xs text-zinc-400 hover:text-pastel-light transition">↺ Restore Defaults</button>
           </div>
-          <div class="flex items-center gap-1.5">
-            <input id="input-new-staple" type="text" placeholder="Add staple item..." onkeydown="if(event.key==='Enter') addPantryStapleFromInput()" class="flex-1 px-3 py-1.5 rounded-lg bg-bg border border-border text-xs text-zinc-100 focus:outline-none focus:border-pastel">
-            <button onclick="addPantryStapleFromInput()" class="px-3 py-1.5 rounded-lg bg-pastel hover:bg-pastel-light text-zinc-950 font-semibold text-xs transition shrink-0">+ Add</button>
+          <div class="flex items-center gap-2">
+            <input id="input-new-staple" type="text" placeholder="Add staple item..." onkeydown="if(event.key==='Enter') addPantryStapleFromInput()" class="flex-1 min-h-[40px] px-3 py-2 rounded-lg bg-bg border border-border text-xs text-zinc-100 focus:outline-none focus:border-pastel">
+            <button onclick="addPantryStapleFromInput()" class="min-h-[40px] px-4 py-2 rounded-lg bg-pastel hover:bg-pastel-light text-zinc-950 font-semibold text-xs transition shrink-0">+ Add</button>
           </div>
-          <div id="pantry-staples-pills" class="flex flex-wrap gap-1.5"></div>
+          <div id="pantry-staples-pills" class="flex flex-wrap gap-2"></div>
         </div>
       </div>
 
-      <div id="hidden-staples-banner" class="hidden px-3 py-2 rounded-xl bg-card/70 border border-dashed border-border flex items-center justify-between gap-2 text-xs">
+      <div id="hidden-staples-banner" class="hidden px-3.5 py-2.5 rounded-xl bg-card/70 border border-dashed border-border flex items-center justify-between gap-2 text-xs">
         <div class="text-zinc-400 truncate">
           <span class="text-pastel-light font-mono font-semibold" id="hidden-staples-count">0</span> staple(s) hidden: <span id="hidden-staples-names" class="text-zinc-300 font-medium"></span>
         </div>
-        <button onclick="toggleHidePantryStaples()" class="text-[11px] text-pastel-light hover:underline shrink-0">Show</button>
+        <button onclick="toggleHidePantryStaples()" class="min-h-[34px] px-2.5 text-xs text-pastel-light hover:underline shrink-0">Show</button>
       </div>
 
       <div id="grocery-items-container" class="bg-card border border-border rounded-xl divide-y divide-border/60 overflow-hidden"></div>
@@ -324,7 +336,7 @@
           <h2 class="text-sm font-semibold text-zinc-100">Sunday Batch Prep</h2>
           <p class="text-[11px] text-zinc-400">Grouped by task category.</p>
         </div>
-        <button onclick="uncheckAllPrep()" class="px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-400 hover:text-zinc-200 text-xs transition shrink-0">Reset Checks</button>
+        <button onclick="uncheckAllPrep()" class="min-h-[38px] px-3 py-1.5 rounded-lg bg-bg border border-border text-zinc-400 hover:text-zinc-200 text-xs transition shrink-0">Reset Checks</button>
       </div>
       <div id="prep-items-container" class="space-y-2.5"></div>
     </section>
@@ -334,16 +346,16 @@
       <div class="bg-card border border-border rounded-xl p-3 sm:p-4 space-y-2.5">
         <div class="flex items-center justify-between">
           <h2 class="text-sm font-semibold text-pastel-light">+ Add New Recipe</h2>
-          <button onclick="resetToDefaultRecipes()" class="text-xs text-zinc-400 hover:text-pastel-light transition">↺ Reset to 10 Defaults</button>
+          <button onclick="resetToDefaultRecipes()" class="min-h-[34px] px-2 text-xs text-zinc-400 hover:text-pastel-light transition">↺ Reset to 10 Defaults</button>
         </div>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
           <div class="col-span-2 sm:col-span-1">
             <label class="block text-[11px] text-zinc-400 mb-1">Recipe Name</label>
-            <input id="input-recipe-name" type="text" placeholder="e.g., Garlic Shrimp" class="w-full px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel">
+            <input id="input-recipe-name" type="text" placeholder="e.g., Garlic Shrimp" class="w-full min-h-[40px] px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel">
           </div>
           <div>
             <label class="block text-[11px] text-zinc-400 mb-1">Category</label>
-            <select id="input-recipe-category" class="w-full px-2 py-1.5 rounded-lg bg-bg border border-border text-zinc-200 focus:outline-none focus:border-pastel">
+            <select id="input-recipe-category" class="w-full min-h-[40px] px-2 py-1.5 rounded-lg bg-bg border border-border text-zinc-200 focus:outline-none focus:border-pastel">
               <option value="Poultry">Poultry</option>
               <option value="Beef">Beef</option>
               <option value="Pasta">Pasta</option>
@@ -354,29 +366,29 @@
           </div>
           <div>
             <label class="block text-[11px] text-zinc-400 mb-1">Cook Time (m)</label>
-            <input id="input-recipe-time" type="number" min="5" max="480" step="5" value="30" class="w-full px-2 py-1.5 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel">
+            <input id="input-recipe-time" type="number" min="5" max="480" step="5" value="30" class="w-full min-h-[40px] px-2 py-1.5 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel">
           </div>
           <div class="col-span-2 sm:col-span-1">
             <label class="block text-[11px] text-zinc-400 mb-1">Base Servings</label>
-            <input id="input-recipe-servings" type="number" min="1" max="12" value="4" class="w-full px-2 py-1.5 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel">
+            <input id="input-recipe-servings" type="number" min="1" max="12" value="4" class="w-full min-h-[40px] px-2 py-1.5 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel">
           </div>
         </div>
         <div class="space-y-2 text-xs">
           <div>
             <label class="block text-[11px] text-zinc-400 mb-1">Ingredients (comma-separated)</label>
-            <input id="input-recipe-ingredients" type="text" placeholder="1 lb shrimp, 3 cloves garlic, 2 tbsp butter, 1 cup rice" class="w-full px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel">
+            <input id="input-recipe-ingredients" type="text" placeholder="1 lb shrimp, 3 cloves garlic, 2 tbsp butter, 1 cup rice" class="w-full min-h-[40px] px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel">
           </div>
           <div>
             <label class="block text-[11px] text-zinc-400 mb-1">Sunday Prep Tasks (comma-separated)</label>
-            <input id="input-recipe-prep" type="text" placeholder="Peel shrimp, Mince garlic" class="w-full px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel">
+            <input id="input-recipe-prep" type="text" placeholder="Peel shrimp, Mince garlic" class="w-full min-h-[40px] px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel">
           </div>
           <div>
             <label class="block text-[11px] text-zinc-400 mb-1">Step-by-Step Cooking Directions (one step per line)</label>
-            <textarea id="input-recipe-instructions" rows="2" placeholder="1. Cook rice.&#10;2. Sear shrimp in garlic butter." class="w-full px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel resize-y"></textarea>
+            <textarea id="input-recipe-instructions" rows="2" placeholder="1. Cook rice.&#10;2. Sear shrimp in garlic butter." class="w-full px-2.5 py-2 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel resize-y"></textarea>
           </div>
         </div>
         <div class="flex justify-end">
-          <button onclick="addNewRecipe()" class="px-4 py-1.5 rounded-lg bg-pastel hover:bg-pastel-light text-zinc-950 font-semibold text-xs transition">+ Save Recipe</button>
+          <button onclick="addNewRecipe()" class="min-h-[40px] px-4 py-2 rounded-lg bg-pastel hover:bg-pastel-light text-zinc-950 font-semibold text-xs transition">+ Save Recipe</button>
         </div>
       </div>
       <div id="recipes-list-container" class="space-y-2.5"></div>
@@ -384,14 +396,14 @@
 
     <!-- 5. HISTORY TAB -->
     <section id="view-history" class="hidden space-y-3">
-      <div class="bg-card border border-border rounded-xl p-3 sm:p-4 flex items-center justify-between gap-2">
+      <div class="bg-card border border-border rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
         <div>
           <h2 class="text-sm font-semibold text-zinc-100">Saved Weekly Plans</h2>
           <p class="text-[11px] text-zinc-400">Tap any meal for its recipe, or expand a week's Groceries & Prep.</p>
         </div>
-        <div class="flex items-center gap-1.5 shrink-0">
-          <button onclick="saveManualPlanSnapshot()" class="px-2.5 py-1.5 rounded-lg bg-pastel hover:bg-pastel-light text-zinc-950 font-semibold text-xs transition">💾 Save Week</button>
-          <button id="btn-clear-history" onclick="clearPlanHistory()" class="hidden px-2 py-1.5 rounded-lg bg-bg border border-border text-zinc-400 hover:text-red-400 text-xs transition">Clear</button>
+        <div class="flex items-center gap-2 shrink-0">
+          <button id="btn-clear-all-history" onclick="clearAllHistoryPlans()" class="min-h-[38px] px-3 py-2 rounded-lg bg-bg border border-border text-zinc-400 hover:text-red-400 hover:border-red-500/40 font-medium text-xs transition">🗑️ Clear All</button>
+          <button onclick="saveManualPlanSnapshot()" class="min-h-[38px] px-3.5 py-2 rounded-lg bg-pastel hover:bg-pastel-light text-zinc-950 font-semibold text-xs transition">💾 Save Week</button>
         </div>
       </div>
       <div id="history-list-container" class="space-y-2.5"></div>
@@ -414,7 +426,7 @@
           <h3 id="modal-recipe-title" class="text-sm sm:text-base font-semibold text-zinc-100 truncate">Recipe Title</h3>
           <div id="modal-recipe-badges" class="flex flex-wrap items-center gap-1.5"></div>
         </div>
-        <button onclick="closeRecipeModal()" class="px-2.5 py-1 rounded-lg bg-bg border border-border text-zinc-400 hover:text-zinc-100 text-xs transition shrink-0">✕</button>
+        <button onclick="closeRecipeModal()" class="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-bg border border-border text-zinc-400 hover:text-zinc-100 text-xs transition shrink-0">✕</button>
       </div>
       <div class="p-3.5 sm:p-4 overflow-y-auto space-y-3.5 text-xs">
         <div>
@@ -431,8 +443,8 @@
         </div>
       </div>
       <div class="px-3.5 py-2.5 border-t border-border bg-zinc-900/40 flex items-center justify-between gap-2">
-        <button id="modal-edit-recipe-btn" class="px-3 py-1.5 rounded-lg bg-bg border border-border text-zinc-300 hover:text-pastel-light text-xs font-medium transition">✎ Edit in Recipes Tab</button>
-        <button onclick="closeRecipeModal()" class="px-4 py-1.5 rounded-lg bg-pastel hover:bg-pastel-light text-zinc-950 font-semibold text-xs transition">Done</button>
+        <button id="modal-edit-recipe-btn" class="min-h-[38px] px-3.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-300 hover:text-pastel-light text-xs font-medium transition">✎ Edit in Recipes Tab</button>
+        <button onclick="closeRecipeModal()" class="min-h-[38px] px-4 py-1.5 rounded-lg bg-pastel hover:bg-pastel-light text-zinc-950 font-semibold text-xs transition">Done</button>
       </div>
     </div>
   </div>
@@ -443,10 +455,13 @@
      * PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL BELOW (ends in /exec)
      * Example: 'https://script.google.com/macros/s/AKfycbx.../exec'
      */
-    const APPS_SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzKt_uIwiFVfm3oIpA0x6bWAjZFw8ILA4aRIWZYPSLuvrKZnbrHbJKeHG-Kw_5nmJ8sEw/exec';
+    const APPS_SCRIPT_WEB_APP_URL = 'PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE';
 
     const ALL_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     const STORAGE_KEY = 'minimal_meal_planner_v4';
+    const AUTO_SYNC_INTERVAL_MS = 30000; // 30 seconds
+    let autoSyncTimer = null;
+    let isSyncInProgress = false;
 
     const DEFAULT_PANTRY_STAPLES = [
       'butter', 'olive oil', 'vegetable oil', 'sesame oil', 'soy sauce',
@@ -688,6 +703,27 @@
       }
     }
 
+    function isUserActivelyTyping() {
+      const active = document.activeElement;
+      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT')) {
+        return true;
+      }
+      if (state.editingRecipeId !== null || state.openMealPickerDay !== null) {
+        return true;
+      }
+      return false;
+    }
+
+    function startAutoSyncTimer() {
+      if (autoSyncTimer) clearInterval(autoSyncTimer);
+      autoSyncTimer = setInterval(() => {
+        if (document.hidden) return;
+        if (!hasBackendConnection()) return;
+        if (isUserActivelyTyping()) return;
+        pullRecipesFromSheet(true);
+      }, AUTO_SYNC_INTERVAL_MS);
+    }
+
     function applyThemeMode() {
       const htmlEl = document.documentElement;
       const btn = document.getElementById('btn-theme-toggle');
@@ -739,8 +775,9 @@
       applyThemeMode();
       renderAll();
       if (hasBackendConnection()) {
-        pullRecipesFromSheet();
+        pullRecipesFromSheet(true);
       }
+      startAutoSyncTimer();
     }
 
     function loadFreshDefaults() {
@@ -811,14 +848,12 @@
       if (!isAppsScriptEnv()) return;
       google.script.run
         .withSuccessHandler(sheetHistory => {
-          if (Array.isArray(sheetHistory) && sheetHistory.length > 0) {
+          if (Array.isArray(sheetHistory)) {
             state.planHistory = sheetHistory;
             saveState();
             renderHistory();
             const histBadge = document.getElementById('history-count-badge');
             if (histBadge) histBadge.textContent = state.planHistory.length;
-          } else if (Array.isArray(state.planHistory) && state.planHistory.length > 0) {
-            syncHistoryToSheet();
           }
         })
         .withFailureHandler(() => {})
@@ -876,20 +911,28 @@
       }
     }
 
-    async function pullRecipesFromSheet() {
+    async function pullRecipesFromSheet(isSilentAutoSync = false) {
+      if (isSyncInProgress) return;
+      isSyncInProgress = true;
+
       if (isAppsScriptEnv()) {
-        updateSyncStatus('Syncing from Sheet...', false);
+        if (!isSilentAutoSync) updateSyncStatus('Syncing from Sheet...', false);
         google.script.run
           .withSuccessHandler(sheetRecipes => {
+            isSyncInProgress = false;
             if (Array.isArray(sheetRecipes) && sheetRecipes.length > 0) {
               state.recipes = sheetRecipes;
               ensureValidSchedule();
               saveState();
-              renderAll();
-              updateSyncStatus('Synced (' + sheetRecipes.length + ' recipes)', true);
+              if (!isUserActivelyTyping()) renderAll();
+              const timeStr = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+              updateSyncStatus('Auto-synced ' + timeStr, true);
             }
           })
-          .withFailureHandler(err => updateSyncStatus('Sync error: ' + err.message, false))
+          .withFailureHandler(err => {
+            isSyncInProgress = false;
+            if (!isSilentAutoSync) updateSyncStatus('Sync error: ' + err.message, false);
+          })
           .getRecipesFromSheet();
         pullStaplesFromSheet();
         pullHistoryFromSheet();
@@ -898,12 +941,15 @@
 
       const url = getRemoteApiUrl();
       if (!url) {
-        showToast('Paste your Apps Script /exec URL into APPS_SCRIPT_WEB_APP_URL first');
+        isSyncInProgress = false;
+        if (!isSilentAutoSync) {
+          showToast('Paste your Apps Script /exec URL into APPS_SCRIPT_WEB_APP_URL first');
+        }
         return;
       }
 
       try {
-        updateSyncStatus('Syncing from Sheet...', false);
+        if (!isSilentAutoSync) updateSyncStatus('Syncing from Sheet...', false);
         const res = await fetch(url + '?action=syncAll');
         const json = await res.json();
         if (!json.ok) throw new Error(json.error || 'Sync failed');
@@ -912,10 +958,8 @@
           state.recipes = json.recipes;
           ensureValidSchedule();
         }
-        if (Array.isArray(json.history) && json.history.length > 0) {
+        if (Array.isArray(json.history)) {
           state.planHistory = json.history;
-        } else if (Array.isArray(state.planHistory) && state.planHistory.length > 0) {
-          syncHistoryToSheet();
         }
         if (Array.isArray(json.staples)) {
           state.pantryStaples = json.staples;
@@ -924,10 +968,13 @@
         }
 
         saveState();
-        renderAll();
-        updateSyncStatus('Synced (' + state.recipes.length + ' recipes)', true);
+        if (!isUserActivelyTyping()) renderAll();
+        const timeStr = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        updateSyncStatus('Auto-synced ' + timeStr, true);
       } catch (err) {
-        updateSyncStatus('Sync error: ' + err.message, false);
+        if (!isSilentAutoSync) updateSyncStatus('Sync error: ' + err.message, false);
+      } finally {
+        isSyncInProgress = false;
       }
     }
 
@@ -939,10 +986,10 @@
         if (!view || !btn) return;
         if (t === tab) {
           view.classList.remove('hidden');
-          btn.className = 'px-1 sm:px-3.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-medium transition border bg-pastel-dim text-pastel-light border-pastel-border flex items-center justify-center gap-1';
+          btn.className = 'min-h-[40px] sm:min-h-0 px-1.5 sm:px-3.5 py-2 sm:py-1.5 rounded-lg text-xs font-medium transition border bg-pastel-dim text-pastel-light border-pastel-border flex items-center justify-center gap-1';
         } else {
           view.classList.add('hidden');
-          btn.className = 'px-1 sm:px-3.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-medium transition border border-transparent text-zinc-400 hover:text-zinc-200 flex items-center justify-center gap-1';
+          btn.className = 'min-h-[40px] sm:min-h-0 px-1.5 sm:px-3.5 py-2 sm:py-1.5 rounded-lg text-xs font-medium transition border border-transparent text-zinc-400 hover:text-zinc-200 flex items-center justify-center gap-1';
         }
       });
       const mainScroll = document.getElementById('main-scroll-container');
@@ -1053,7 +1100,7 @@
         return `
           <button
             onclick="setDayRecipe('${day}', '${escapeHtml(r.id)}')"
-            class="w-full text-left px-2.5 py-2 rounded-lg text-xs transition flex items-center justify-between gap-2 ${
+            class="w-full min-h-[42px] text-left px-3 py-2 rounded-lg text-xs transition flex items-center justify-between gap-2 ${
               isSelected ? 'bg-pastel-dim text-pastel-light font-semibold' : 'text-zinc-200 hover:bg-zinc-800/80'
             }"
           >
@@ -1129,7 +1176,7 @@
             </div>
             <p class="text-[11px] text-zinc-400 truncate mt-0.5">Matches: <span class="text-pastel-light font-mono">${matchedTerms.map(escapeHtml).join(', ')}</span></p>
           </div>
-          <button onclick="assignRecipeToNextCookSlot('${escapeHtml(recipe.id)}')" class="px-2.5 py-1.5 rounded-lg bg-pastel hover:bg-pastel-light text-zinc-950 font-semibold text-[11px] transition shrink-0">+ Schedule</button>
+          <button onclick="assignRecipeToNextCookSlot('${escapeHtml(recipe.id)}')" class="min-h-[36px] px-3 py-1.5 rounded-lg bg-pastel hover:bg-pastel-light text-zinc-950 font-semibold text-xs transition shrink-0">+ Schedule</button>
         </div>
       `).join('');
     }
@@ -1433,8 +1480,8 @@
       const doubleLabel = document.getElementById('double-day-label');
       if (doubleBtn && doubleDot && doubleLabel) {
         doubleBtn.className = state.doubleDayCooking
-          ? 'justify-center px-2 sm:px-3 py-1.5 rounded-lg border text-[11px] sm:text-xs font-medium transition flex items-center gap-1 bg-pastel-dim text-pastel-light border-pastel-border truncate'
-          : 'justify-center px-2 sm:px-3 py-1.5 rounded-lg border text-[11px] sm:text-xs font-medium transition flex items-center gap-1 bg-bg text-zinc-400 border-border truncate';
+          ? 'min-h-[38px] sm:min-h-0 justify-center px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-lg border text-xs font-medium transition flex items-center gap-1 bg-pastel-dim text-pastel-light border-pastel-border truncate'
+          : 'min-h-[38px] sm:min-h-0 justify-center px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-lg border text-xs font-medium transition flex items-center gap-1 bg-bg text-zinc-400 border-border truncate';
         doubleDot.className = state.doubleDayCooking ? 'w-1.5 h-1.5 rounded-full bg-pastel shrink-0' : 'w-1.5 h-1.5 rounded-full bg-zinc-600 shrink-0';
         doubleLabel.textContent = state.doubleDayCooking ? '2-Night: ON' : '2-Night: OFF';
       }
@@ -1443,8 +1490,8 @@
       const balDot = document.getElementById('balanced-shuffle-dot');
       if (balBtn && balDot) {
         balBtn.className = state.balancedVariety
-          ? 'justify-center px-2 sm:px-3 py-1.5 rounded-lg border text-[11px] sm:text-xs font-medium transition flex items-center gap-1 bg-pastel-dim text-pastel-light border-pastel-border truncate'
-          : 'justify-center px-2 sm:px-3 py-1.5 rounded-lg border text-[11px] sm:text-xs font-medium transition flex items-center gap-1 bg-bg text-zinc-400 border-border truncate';
+          ? 'min-h-[38px] sm:min-h-0 justify-center px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-lg border text-xs font-medium transition flex items-center gap-1 bg-pastel-dim text-pastel-light border-pastel-border truncate'
+          : 'min-h-[38px] sm:min-h-0 justify-center px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-lg border text-xs font-medium transition flex items-center gap-1 bg-bg text-zinc-400 border-border truncate';
         balDot.className = state.balancedVariety ? 'w-1.5 h-1.5 rounded-full bg-pastel shrink-0' : 'w-1.5 h-1.5 rounded-full bg-zinc-600 shrink-0';
       }
 
@@ -1481,14 +1528,14 @@
 
         if (meta.role === 'LEFTOVER') {
           return `
-            <div class="bg-card/60 border border-dashed border-border rounded-xl p-2.5 sm:p-3.5 transition">
+            <div class="bg-card/60 border border-dashed border-border rounded-xl p-3 sm:p-3.5 transition">
               <div class="flex items-center justify-between gap-2">
                 <div class="flex flex-wrap items-center gap-1.5 min-w-0">
                   <span class="text-[11px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-zinc-800/80 text-zinc-400 font-medium">${day}</span>
                   <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-pastel-dim text-pastel-light border border-pastel-border">♻️ Reheat (${meta.pairedDayName})</span>
                   <h3 class="text-xs sm:text-sm font-medium text-zinc-300 truncate">${escapeHtml(recipe.name)}</h3>
                 </div>
-                <button onclick="toggleDayInstructions('${day}')" class="px-2.5 py-1 rounded-lg bg-bg border border-border text-zinc-400 hover:text-zinc-200 text-[11px] font-medium transition shrink-0">${isExpanded ? 'Hide' : '📖 Steps'}</button>
+                <button onclick="toggleDayInstructions('${day}')" class="min-h-[38px] px-3 py-1.5 rounded-lg bg-bg border border-border text-zinc-400 hover:text-zinc-200 text-xs font-medium transition shrink-0">${isExpanded ? 'Hide' : '📖 Steps'}</button>
               </div>
               ${isExpanded ? `
                 <div class="mt-2.5 pt-2.5 border-t border-border/70 text-xs text-zinc-300 space-y-1.5">
@@ -1505,9 +1552,9 @@
           : `<span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300">${totalPortions}p</span>`;
 
         return `
-          <div class="bg-card border ${isLocked ? 'border-pastel-border' : 'border-border'} rounded-xl p-2.5 sm:p-4 hover:border-pastel-border transition">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div class="space-y-1 min-w-0">
+          <div class="bg-card border ${isLocked ? 'border-pastel-border' : 'border-border'} rounded-xl p-3 sm:p-4 hover:border-pastel-border transition">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <div class="space-y-1.5 min-w-0">
                 <div class="flex flex-wrap items-center gap-1.5">
                   <span class="text-[11px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-pastel-dim text-pastel-light font-medium">${day}</span>
                   ${badgeHtml}
@@ -1518,36 +1565,36 @@
                 <div class="relative">
                   <button
                     onclick="toggleDayMealPicker('${day}', event)"
-                    class="group text-left inline-flex items-center gap-1.5 max-w-full py-0.5 rounded hover:text-pastel-light transition"
+                    class="group min-h-[38px] text-left inline-flex items-center gap-2 max-w-full py-1 rounded hover:text-pastel-light transition"
                   >
                     <span class="text-sm sm:text-base font-semibold text-zinc-100 group-hover:text-pastel-light truncate">${escapeHtml(recipe.name)}</span>
-                    <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-bg border border-border text-zinc-400 group-hover:text-pastel-light shrink-0">🔍 ▾</span>
+                    <span class="text-xs font-mono px-2 py-1 rounded-lg bg-bg border border-border text-zinc-400 group-hover:text-pastel-light shrink-0">🔍 ▾</span>
                   </button>
 
                   ${isPickerOpen ? `
-                    <div onclick="event.stopPropagation()" class="fixed inset-x-3 top-20 sm:absolute sm:inset-x-auto sm:left-0 sm:top-full sm:mt-1.5 sm:w-80 bg-card border border-pastel-border rounded-xl shadow-2xl p-2.5 z-50 space-y-2">
+                    <div onclick="event.stopPropagation()" class="fixed inset-x-3 top-24 sm:absolute sm:inset-x-auto sm:left-0 sm:top-full sm:mt-1.5 sm:w-80 bg-card border border-pastel-border rounded-xl shadow-2xl p-3 z-50 space-y-2.5">
                       <div class="flex items-center justify-between gap-2">
-                        <span class="text-[11px] font-mono text-pastel-light font-semibold">Choose Meal for ${day}</span>
-                        <button onclick="closeDayMealPicker()" class="text-xs text-zinc-400 hover:text-zinc-200 px-1.5 py-0.5">✕</button>
+                        <span class="text-xs font-mono text-pastel-light font-semibold">Choose Meal for ${day}</span>
+                        <button onclick="closeDayMealPicker()" class="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-bg border border-border text-xs text-zinc-400 hover:text-zinc-200">✕</button>
                       </div>
                       <input
                         id="meal-picker-input-${day}"
                         type="text"
                         placeholder="Type to search meals..."
                         oninput="filterMealPickerOptions('${day}', this.value)"
-                        class="w-full px-2.5 py-1.5 rounded-lg bg-bg border border-border text-xs text-zinc-100 focus:outline-none focus:border-pastel"
+                        class="w-full min-h-[40px] px-3 py-2 rounded-lg bg-bg border border-border text-xs text-zinc-100 focus:outline-none focus:border-pastel"
                       >
-                      <div id="meal-picker-list-${day}" class="max-h-56 overflow-y-auto space-y-1 pr-1"></div>
+                      <div id="meal-picker-list-${day}" class="max-h-60 overflow-y-auto space-y-1 pr-1"></div>
                     </div>
                   ` : ''}
                 </div>
               </div>
 
-              <div class="grid grid-cols-4 sm:flex items-center gap-1 sm:gap-1.5 shrink-0 pt-1 sm:pt-0 border-t border-border/50 sm:border-none">
-                <button onclick="toggleLockDay('${day}')" class="px-2 py-1.5 rounded-lg border text-[11px] font-medium transition text-center ${isLocked ? 'bg-pastel-dim border-pastel-border text-pastel-light' : 'bg-bg border-border text-zinc-400'}">${isLocked ? '📌 Locked' : '📌 Pin'}</button>
-                <button onclick="jumpToEditRecipe('${escapeHtml(recipe.id)}')" class="px-2 py-1.5 rounded-lg bg-bg border border-border text-zinc-300 hover:text-pastel-light text-[11px] font-medium transition text-center">✎ Edit</button>
-                <button onclick="toggleDayInstructions('${day}')" class="px-2 py-1.5 rounded-lg ${isExpanded ? 'bg-pastel-dim border-pastel-border text-pastel-light' : 'bg-bg border-border text-zinc-300'} border text-[11px] font-medium transition text-center">${isExpanded ? 'Hide' : '📖 Steps'}</button>
-                <button onclick="swapDayMeal('${day}')" class="px-2 py-1.5 rounded-lg bg-bg border border-border hover:border-pastel-border text-zinc-300 hover:text-pastel-light text-[11px] font-medium transition text-center">⇄ Swap</button>
+              <div class="grid grid-cols-4 sm:flex items-center gap-1.5 shrink-0 pt-1.5 sm:pt-0 border-t border-border/50 sm:border-none">
+                <button onclick="toggleLockDay('${day}')" class="min-h-[38px] sm:min-h-0 px-2.5 py-2 sm:py-1.5 rounded-lg border text-xs font-medium transition text-center ${isLocked ? 'bg-pastel-dim border-pastel-border text-pastel-light' : 'bg-bg border-border text-zinc-400'}">${isLocked ? '📌 Locked' : '📌 Pin'}</button>
+                <button onclick="jumpToEditRecipe('${escapeHtml(recipe.id)}')" class="min-h-[38px] sm:min-h-0 px-2.5 py-2 sm:py-1.5 rounded-lg bg-bg border border-border text-zinc-300 hover:text-pastel-light text-xs font-medium transition text-center">✎ Edit</button>
+                <button onclick="toggleDayInstructions('${day}')" class="min-h-[38px] sm:min-h-0 px-2.5 py-2 sm:py-1.5 rounded-lg ${isExpanded ? 'bg-pastel-dim border-pastel-border text-pastel-light' : 'bg-bg border-border text-zinc-300'} border text-xs font-medium transition text-center">${isExpanded ? 'Hide' : '📖 Steps'}</button>
+                <button onclick="swapDayMeal('${day}')" class="min-h-[38px] sm:min-h-0 px-2.5 py-2 sm:py-1.5 rounded-lg bg-bg border border-border hover:border-pastel-border text-zinc-300 hover:text-pastel-light text-xs font-medium transition text-center">⇄ Swap</button>
               </div>
             </div>
 
@@ -1555,7 +1602,7 @@
               <div class="mt-2.5 pt-2.5 border-t border-border space-y-2">
                 <div class="text-[11px] font-mono uppercase tracking-wider text-pastel-light">Cooking Directions (${totalPortions} Portions)</div>
                 ${instructions.length > 0 ? `
-                  <ol class="space-y-1 text-xs text-zinc-300 list-decimal list-inside">
+                  <ol class="space-y-1.5 text-xs text-zinc-300 list-decimal list-inside">
                     ${instructions.map(step => `<li class="leading-relaxed">${escapeHtml(step)}</li>`).join('')}
                   </ol>
                 ` : `<p class="text-xs text-zinc-500 italic">No instructions listed.</p>`}
@@ -1596,8 +1643,8 @@
       if (staplesCountBadge) staplesCountBadge.textContent = (state.pantryStaples || []).length;
       if (toggleStaplesBtn && staplesDot && staplesLabel) {
         toggleStaplesBtn.className = state.hidePantryStaples
-          ? 'justify-center px-2.5 py-1.5 rounded-lg border text-xs font-medium transition flex items-center gap-1.5 bg-pastel-dim text-pastel-light border-pastel-border'
-          : 'justify-center px-2.5 py-1.5 rounded-lg border text-xs font-medium transition flex items-center gap-1.5 bg-bg text-zinc-400 border-border';
+          ? 'min-h-[40px] sm:min-h-0 justify-center px-3 py-2 sm:py-1.5 rounded-lg border text-xs font-medium transition flex items-center gap-1.5 bg-pastel-dim text-pastel-light border-pastel-border'
+          : 'min-h-[40px] sm:min-h-0 justify-center px-3 py-2 sm:py-1.5 rounded-lg border text-xs font-medium transition flex items-center gap-1.5 bg-bg text-zinc-400 border-border';
         staplesDot.className = state.hidePantryStaples ? 'w-2 h-2 rounded-full bg-pastel shrink-0' : 'w-2 h-2 rounded-full bg-zinc-600 shrink-0';
         staplesLabel.textContent = state.hidePantryStaples ? 'Hide Staples: ON' : 'Hide Staples: OFF';
       }
@@ -1605,9 +1652,9 @@
       if (drawer) drawer.classList.toggle('hidden', !state.pantryDrawerOpen);
       if (pillsContainer) {
         pillsContainer.innerHTML = (state.pantryStaples || []).map(staple => `
-          <span class="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full bg-bg border border-border text-zinc-300">
+          <span class="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full bg-bg border border-border text-zinc-300">
             <span>${escapeHtml(staple)}</span>
-            <button onclick="removePantryStaple('${escapeHtml(staple)}')" class="text-zinc-500 hover:text-red-400 font-bold">×</button>
+            <button onclick="removePantryStaple('${escapeHtml(staple)}')" class="min-w-[22px] min-h-[22px] inline-flex items-center justify-center text-zinc-400 hover:text-red-400 font-bold">×</button>
           </span>
         `).join('');
       }
@@ -1647,8 +1694,8 @@
         const checked = !!state.checkedGroceries[item.key];
         const isStaple = !!item.isStaple;
         return `
-          <div class="flex items-center justify-between gap-2 px-3 sm:px-4 py-2.5 hover:bg-zinc-900/40 transition ${isStaple ? 'bg-amber-500/[0.04]' : ''}">
-            <label class="flex items-center gap-3 cursor-pointer flex-1 min-w-0">
+          <div class="flex items-center justify-between gap-2 px-3 sm:px-4 py-3 hover:bg-zinc-900/40 transition ${isStaple ? 'bg-amber-500/[0.04]' : ''}">
+            <label class="flex items-center gap-3 cursor-pointer flex-1 min-w-0 py-0.5">
               <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleGroceryCheck('${escapeHtml(item.key)}')">
               <div class="flex flex-wrap items-center gap-1.5 min-w-0">
                 <span class="text-xs sm:text-sm ${checked ? 'done-text' : (isStaple ? 'text-amber-200 font-medium' : 'text-zinc-200 font-medium')}">${escapeHtml(item.displayText)}</span>
@@ -1657,12 +1704,12 @@
               </div>
             </label>
             <div class="flex items-center gap-1.5 shrink-0">
-              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-bg border border-border text-zinc-400 max-w-[110px] sm:max-w-none truncate">${escapeHtml(item.daysLabel)}</span>
+              <span class="text-[10px] font-mono px-2 py-1 rounded bg-bg border border-border text-zinc-400 max-w-[100px] sm:max-w-none truncate">${escapeHtml(item.daysLabel)}</span>
               ${item.isExtra
-                ? `<button onclick="removeExtraGroceryItem('${escapeHtml(item.name)}')" class="text-[11px] px-2 py-1 rounded bg-bg border border-border text-zinc-400 hover:text-red-400 transition">✕</button>`
+                ? `<button onclick="removeExtraGroceryItem('${escapeHtml(item.name)}')" class="min-h-[34px] min-w-[34px] flex items-center justify-center text-xs px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-400 hover:text-red-400 transition">✕</button>`
                 : (isStaple
-                    ? `<button onclick="removePantryStaple('${escapeHtml(item.name)}')" class="text-[11px] px-2 py-1 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 transition">− Unstaple</button>`
-                    : `<button onclick="addPantryStaple('${escapeHtml(item.name)}')" class="text-[11px] px-2 py-1 rounded bg-bg border border-border text-zinc-400 hover:text-pastel-light transition">+ Staple</button>`
+                    ? `<button onclick="removePantryStaple('${escapeHtml(item.name)}')" class="min-h-[34px] text-xs px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 transition">− Unstaple</button>`
+                    : `<button onclick="addPantryStaple('${escapeHtml(item.name)}')" class="min-h-[34px] text-xs px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-400 hover:text-pastel-light transition">+ Staple</button>`
                   )
               }
             </div>
@@ -1674,7 +1721,7 @@
         const items = grouped[aisle];
         return `
           <div>
-            <div class="px-3 sm:px-4 py-1.5 bg-zinc-900/70 border-b border-border/60 flex items-center justify-between">
+            <div class="px-3 sm:px-4 py-2 bg-zinc-900/70 border-b border-border/60 flex items-center justify-between">
               <span class="text-[11px] font-mono uppercase tracking-wider text-pastel-light font-semibold">${aisle}</span>
               <span class="text-[10px] font-mono text-zinc-400">${items.length}</span>
             </div>
@@ -1795,17 +1842,17 @@
         const items = group.tasks;
         const catDone = items.filter(i => state.checkedPrep[i.key]).length;
         return `
-          <div class="bg-card border border-border rounded-xl p-3 sm:p-4">
-            <div class="flex items-center justify-between mb-2 pb-1.5 border-b border-border/70">
+          <div class="bg-card border border-border rounded-xl p-3.5 sm:p-4">
+            <div class="flex items-center justify-between mb-2.5 pb-2 border-b border-border/70">
               <span class="text-xs font-semibold text-pastel-light">${group.category}</span>
               <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-bg border border-border text-zinc-400">${catDone}/${items.length}</span>
             </div>
-            <div class="space-y-2">
+            <div class="space-y-2.5">
               ${items.map(item => {
                 const checked = !!state.checkedPrep[item.key];
                 return `
-                  <label class="flex items-start justify-between gap-2.5 cursor-pointer py-1">
-                    <div class="flex items-start gap-2.5 min-w-0">
+                  <label class="flex items-start justify-between gap-3 cursor-pointer py-1.5">
+                    <div class="flex items-start gap-3 min-w-0">
                       <input type="checkbox" class="mt-0.5 shrink-0" ${checked ? 'checked' : ''} onchange="togglePrepCheck('${item.key}')">
                       <span class="text-xs sm:text-sm ${checked ? 'done-text' : 'text-zinc-200'}">${escapeHtml(item.task)}</span>
                     </div>
@@ -1849,37 +1896,37 @@
             <div id="recipe-card-${escapeHtml(recipe.id)}" class="bg-card border-2 border-pastel rounded-xl p-3 sm:p-4 space-y-2.5">
               <div class="flex items-center justify-between">
                 <span class="text-xs font-mono uppercase tracking-wider text-pastel-light font-semibold">✎ Editing Recipe</span>
-                <button onclick="cancelEditRecipe()" class="text-xs text-zinc-400 hover:text-zinc-200">✕ Cancel</button>
+                <button onclick="cancelEditRecipe()" class="min-h-[34px] px-2.5 text-xs text-zinc-400 hover:text-zinc-200">✕ Cancel</button>
               </div>
               <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                <input id="edit-name-${escapeHtml(recipe.id)}" type="text" value="${escapeHtml(recipe.name)}" class="col-span-2 sm:col-span-1 px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-100">
-                <input id="edit-category-${escapeHtml(recipe.id)}" type="text" value="${escapeHtml(recipe.category || 'Dinner')}" class="px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-100">
-                <input id="edit-time-${escapeHtml(recipe.id)}" type="number" value="${cookTime}" class="px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-100">
-                <input id="edit-servings-${escapeHtml(recipe.id)}" type="number" value="${recipe.baseServings || 4}" class="px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-100">
+                <input id="edit-name-${escapeHtml(recipe.id)}" type="text" value="${escapeHtml(recipe.name)}" class="col-span-2 sm:col-span-1 min-h-[40px] px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-100">
+                <input id="edit-category-${escapeHtml(recipe.id)}" type="text" value="${escapeHtml(recipe.category || 'Dinner')}" class="min-h-[40px] px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-100">
+                <input id="edit-time-${escapeHtml(recipe.id)}" type="number" value="${cookTime}" class="min-h-[40px] px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-100">
+                <input id="edit-servings-${escapeHtml(recipe.id)}" type="number" value="${recipe.baseServings || 4}" class="min-h-[40px] px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-100">
               </div>
-              <input id="edit-ingredients-${escapeHtml(recipe.id)}" type="text" value="${escapeHtml((recipe.ingredients || []).join(', '))}" class="w-full px-2.5 py-1.5 rounded-lg bg-bg border border-border text-xs text-zinc-100">
-              <input id="edit-prep-${escapeHtml(recipe.id)}" type="text" value="${escapeHtml((recipe.prep || []).join(', '))}" class="w-full px-2.5 py-1.5 rounded-lg bg-bg border border-border text-xs text-zinc-100">
-              <textarea id="edit-instructions-${escapeHtml(recipe.id)}" rows="3" class="w-full px-2.5 py-1.5 rounded-lg bg-bg border border-border text-xs text-zinc-100">${escapeHtml(instructionsText)}</textarea>
+              <input id="edit-ingredients-${escapeHtml(recipe.id)}" type="text" value="${escapeHtml((recipe.ingredients || []).join(', '))}" class="w-full min-h-[40px] px-2.5 py-1.5 rounded-lg bg-bg border border-border text-xs text-zinc-100">
+              <input id="edit-prep-${escapeHtml(recipe.id)}" type="text" value="${escapeHtml((recipe.prep || []).join(', '))}" class="w-full min-h-[40px] px-2.5 py-1.5 rounded-lg bg-bg border border-border text-xs text-zinc-100">
+              <textarea id="edit-instructions-${escapeHtml(recipe.id)}" rows="3" class="w-full px-2.5 py-2 rounded-lg bg-bg border border-border text-xs text-zinc-100">${escapeHtml(instructionsText)}</textarea>
               <div class="flex justify-end gap-2">
-                <button onclick="saveEditedRecipe('${escapeHtml(recipe.id)}')" class="px-3.5 py-1.5 rounded-lg bg-pastel text-zinc-950 font-semibold text-xs">✓ Save Changes</button>
+                <button onclick="saveEditedRecipe('${escapeHtml(recipe.id)}')" class="min-h-[40px] px-4 py-2 rounded-lg bg-pastel text-zinc-950 font-semibold text-xs">✓ Save Changes</button>
               </div>
             </div>
           `;
         }
 
         return `
-          <div id="recipe-card-${escapeHtml(recipe.id)}" class="bg-card border border-border rounded-xl p-3 sm:p-4 flex items-start justify-between gap-2">
-            <div class="space-y-1 min-w-0">
+          <div id="recipe-card-${escapeHtml(recipe.id)}" class="bg-card border border-border rounded-xl p-3 sm:p-4 flex items-center justify-between gap-2">
+            <div class="space-y-1 min-w-0 flex-1">
               <div class="flex items-center gap-1.5 flex-wrap">
-                <h3 onclick="openRecipeModal('${escapeHtml(recipe.id)}', '${escapeHtml(recipe.name)}')" class="text-xs sm:text-sm font-semibold text-zinc-100 hover:text-pastel-light cursor-pointer">${escapeHtml(recipe.name)}</h3>
+                <h3 onclick="openRecipeModal('${escapeHtml(recipe.id)}', '${escapeHtml(recipe.name)}')" class="text-xs sm:text-sm font-semibold text-zinc-100 hover:text-pastel-light cursor-pointer py-0.5">${escapeHtml(recipe.name)}</h3>
                 <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-pastel-dim text-pastel-light">⏱️ ${cookTime}m</span>
                 <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">${escapeHtml(recipe.category || 'Dinner')}</span>
               </div>
               <p class="text-[11px] text-zinc-400 truncate">${(recipe.ingredients || []).map(escapeHtml).join(' • ')}</p>
             </div>
             <div class="flex items-center gap-1.5 shrink-0">
-              <button onclick="startEditRecipe('${escapeHtml(recipe.id)}')" class="text-xs text-zinc-300 hover:text-pastel-light px-2.5 py-1 rounded-lg bg-bg border border-border transition">✎ Edit</button>
-              <button onclick="deleteRecipe('${escapeHtml(recipe.id)}')" class="text-xs text-zinc-500 hover:text-red-400 px-2 py-1">Delete</button>
+              <button onclick="startEditRecipe('${escapeHtml(recipe.id)}')" class="min-h-[36px] text-xs text-zinc-300 hover:text-pastel-light px-3 py-1.5 rounded-lg bg-bg border border-border transition">✎ Edit</button>
+              <button onclick="deleteRecipe('${escapeHtml(recipe.id)}')" class="min-h-[36px] text-xs text-zinc-500 hover:text-red-400 px-2.5 py-1.5 rounded-lg bg-bg border border-border/60">Delete</button>
             </div>
           </div>
         `;
@@ -2065,22 +2112,31 @@
       renderHistory();
     }
 
-    function clearPlanHistory() {
+    function clearAllHistoryPlans() {
+      if (!Array.isArray(state.planHistory) || state.planHistory.length === 0) {
+        showToast('History is already empty');
+        return;
+      }
+      if (!confirm('Clear all saved weekly plans from History?')) return;
       state.planHistory = [];
+      state.expandedHistoryIds = {};
       saveState();
       syncHistoryToSheet();
       renderHistory();
+      showToast('Cleared all saved history');
     }
 
     function renderHistory() {
       const container = document.getElementById('history-list-container');
       const badge = document.getElementById('history-count-badge');
-      const clearBtn = document.getElementById('btn-clear-history');
+      const clearAllBtn = document.getElementById('btn-clear-all-history');
       if (!container || !badge) return;
 
       const list = Array.isArray(state.planHistory) ? state.planHistory : [];
       badge.textContent = list.length;
-      if (clearBtn) clearBtn.classList.toggle('hidden', list.length === 0);
+      if (clearAllBtn) {
+        clearAllBtn.classList.toggle('hidden', list.length === 0);
+      }
 
       if (list.length === 0) {
         container.innerHTML = `<div class="bg-card border border-border rounded-xl p-6 text-center text-xs text-zinc-400">No saved plans yet. Click <strong>✉ Email Plan</strong> or <strong>💾 Save Week</strong>.</div>`;
@@ -2100,26 +2156,26 @@
                 <span class="text-xs font-mono text-zinc-400">${escapeHtml(plan.createdAt)}</span>
                 <span class="text-[11px] text-zinc-500">• ${plan.people}p, ${plan.daysCount}d</span>
               </div>
-              <div class="flex items-center gap-1.5">
+              <div class="flex items-center gap-2">
                 <button
                   onclick="toggleHistoryDetails('${plan.id}')"
-                  class="px-2.5 py-1 rounded-lg border text-xs font-medium transition ${
+                  class="min-h-[36px] px-3 py-1.5 rounded-lg border text-xs font-medium transition ${
                     isExpanded ? 'bg-pastel-dim border-pastel-border text-pastel-light' : 'bg-bg border-border text-zinc-300 hover:text-pastel-light'
                   }"
                 >
                   ${isExpanded ? 'Hide Lists' : `🛒 Groceries (${groceries.length}) & 🔪 Prep (${totalPrepCount})`}
                 </button>
-                <button onclick="restoreHistoryPlan('${plan.id}')" class="px-2.5 py-1 rounded-lg bg-pastel text-zinc-950 font-semibold text-xs">↺ Load</button>
-                <button onclick="deleteHistoryPlan('${plan.id}')" class="px-2 py-1 rounded-lg bg-bg border border-border text-zinc-400 hover:text-red-400 text-xs">✕</button>
+                <button onclick="restoreHistoryPlan('${plan.id}')" class="min-h-[36px] px-3 py-1.5 rounded-lg bg-pastel text-zinc-950 font-semibold text-xs">↺ Load</button>
+                <button onclick="deleteHistoryPlan('${plan.id}')" class="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-bg border border-border text-zinc-400 hover:text-red-400 text-xs">✕</button>
               </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
               ${(plan.scheduleSummary || []).map(s => `
-                <div class="p-2 rounded-lg bg-bg border border-border/80 flex items-center justify-between gap-2 text-xs">
-                  <div class="min-w-0">
+                <div class="p-2.5 rounded-lg bg-bg border border-border/80 flex items-center justify-between gap-2 text-xs">
+                  <div class="min-w-0 flex-1">
                     <span class="font-mono text-[10px] text-pastel-light uppercase">${escapeHtml(s.day)}</span>
-                    <button onclick="openRecipeModal('${escapeHtml(s.recipeId || '')}', '${escapeHtml(s.mealName)}')" class="block text-left font-medium text-zinc-200 hover:text-pastel-light truncate">${escapeHtml(s.mealName)} 📖</button>
+                    <button onclick="openRecipeModal('${escapeHtml(s.recipeId || '')}', '${escapeHtml(s.mealName)}')" class="min-h-[32px] w-full flex items-center text-left font-medium text-zinc-200 hover:text-pastel-light truncate">${escapeHtml(s.mealName)} 📖</button>
                   </div>
                   <span class="text-[10px] font-mono text-zinc-400 shrink-0">${escapeHtml(s.details)}</span>
                 </div>
