@@ -41,6 +41,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
+  <!-- PDF.js for client-side Recipe PDF Import -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
   <style>
     :root {
       color-scheme: dark;
@@ -342,12 +345,20 @@
     <!-- 4. RECIPES TAB -->
     <section id="view-recipes" class="hidden space-y-3">
       <div class="bg-card border border-border rounded-xl p-3.5 sm:p-4 space-y-3">
-        <div class="flex items-center justify-between gap-2">
+        <div class="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 class="text-sm font-semibold text-zinc-100">Add New Recipe</h2>
+            <div class="flex items-center gap-2">
+              <h2 class="text-sm font-semibold text-zinc-100">Add New Recipe</h2>
+              <span id="gemini-status-pill" class="text-[10px] font-mono px-2 py-0.5 rounded bg-pastel-dim text-pastel-light border border-pastel-border">✨ Gemini Ready</span>
+            </div>
             <p class="text-[11px] text-zinc-400">Automatically syncs to your Google Sheet.</p>
           </div>
-          <button onclick="resetToDefaultRecipes()" class="min-h-[36px] px-2.5 py-1 rounded-lg bg-bg border border-border text-zinc-400 hover:text-pastel-light text-xs transition">↺ Restore 10 Defaults</button>
+          <div class="flex flex-wrap items-center gap-2">
+            <input id="input-recipe-pdf" type="file" accept="application/pdf,.pdf" class="hidden" onchange="handleRecipePdfImport(event)">
+            <button id="btn-import-pdf" onclick="document.getElementById('input-recipe-pdf').click()" class="min-h-[36px] px-2.5 py-1 rounded-lg bg-pastel-dim border border-pastel-border text-pastel-light hover:bg-pastel/20 font-medium text-xs transition">📄 Import PDF</button>
+            <button onclick="openGeminiKeyModal()" class="min-h-[36px] px-2.5 py-1 rounded-lg bg-bg border border-border text-zinc-300 hover:text-pastel-light text-xs transition" title="Configure your free Gemini API key for AI Prep & PDF parsing">🔑 Gemini AI</button>
+            <button onclick="resetToDefaultRecipes()" class="min-h-[36px] px-2.5 py-1 rounded-lg bg-bg border border-border text-zinc-400 hover:text-pastel-light text-xs transition">↺ Restore 10 Defaults</button>
+          </div>
         </div>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
           <input id="input-recipe-name" type="text" placeholder="Recipe Name *" class="col-span-2 sm:col-span-1 min-h-[40px] px-3 py-2 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel">
@@ -356,7 +367,10 @@
           <input id="input-recipe-servings" type="number" placeholder="Base Servings" value="4" class="min-h-[40px] px-3 py-2 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel">
         </div>
         <input id="input-recipe-ingredients" type="text" placeholder="Ingredients (comma-separated, e.g., 1.5 lbs chicken breast, 2 crowns broccoli) *" class="w-full min-h-[40px] px-3 py-2 rounded-lg bg-bg border border-border text-xs text-zinc-100 focus:outline-none focus:border-pastel">
-        <input id="input-recipe-prep" type="text" placeholder="Sunday Prep tasks (comma-separated, e.g., Cube chicken, Chop broccoli)" class="w-full min-h-[40px] px-3 py-2 rounded-lg bg-bg border border-border text-xs text-zinc-100 focus:outline-none focus:border-pastel">
+        <div class="flex items-center gap-2">
+          <input id="input-recipe-prep" type="text" placeholder="Sunday Prep tasks (comma-separated, e.g., Cube chicken, Chop broccoli)" class="flex-1 min-h-[40px] px-3 py-2 rounded-lg bg-bg border border-border text-xs text-zinc-100 focus:outline-none focus:border-pastel">
+          <button id="btn-ai-prep-new" onclick="generateSmartPrepForForm('new')" class="min-h-[40px] px-3 py-2 rounded-lg bg-pastel-dim border border-pastel-border text-pastel-light hover:bg-pastel/20 font-medium text-xs transition shrink-0" title="Analyze ingredients & steps to generate Sunday prep tasks">✨ Auto-Prep</button>
+        </div>
         <textarea id="input-recipe-instructions" rows="3" placeholder="Cooking steps (one step per line)..." class="w-full px-3 py-2 rounded-lg bg-bg border border-border text-xs text-zinc-100 focus:outline-none focus:border-pastel"></textarea>
         <div class="flex justify-end">
           <button onclick="addNewRecipe()" class="min-h-[40px] px-4 py-2 rounded-lg bg-pastel hover:bg-pastel-light text-zinc-950 font-semibold text-xs transition">+ Add Recipe</button>
@@ -468,6 +482,32 @@
     </div>
   </div>
 
+  <!-- GEMINI AI SETTINGS MODAL -->
+  <div id="gemini-key-modal-backdrop" onclick="closeGeminiKeyModal()" class="fixed inset-0 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+    <div onclick="event.stopPropagation()" class="bg-card border border-pastel-border rounded-2xl max-w-md w-full p-4 space-y-3 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-semibold text-zinc-100">✨ Gemini AI Integration</h3>
+        <button onclick="closeGeminiKeyModal()" class="min-h-[32px] min-w-[32px] rounded-lg bg-bg border border-border text-zinc-400 hover:text-zinc-100 text-xs">✕</button>
+      </div>
+      <p class="text-xs text-zinc-400 leading-relaxed">
+        Power <strong class="text-zinc-200">✨ Auto-Prep</strong> and <strong class="text-zinc-200">📄 PDF Recipe Import</strong> with Google's <span class="font-mono text-pastel-light">gemini-3-flash-preview</span> model. Get a free API key at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="text-pastel-light underline">Google AI Studio</a>, or store it in <span class="font-mono text-zinc-300">Code.gs</span> so all your devices share it automatically.
+      </p>
+      <input
+        id="input-gemini-api-key"
+        type="password"
+        placeholder="AIzaSy... (Paste Gemini API Key)"
+        class="w-full min-h-[40px] px-3 py-2 rounded-lg bg-bg border border-border text-xs font-mono text-zinc-100 focus:outline-none focus:border-pastel"
+      >
+      <div class="flex items-center justify-between gap-2 pt-1">
+        <button onclick="clearGeminiApiKey()" class="min-h-[38px] px-3 py-1.5 rounded-lg bg-bg border border-border text-zinc-400 hover:text-red-400 text-xs">Clear Key</button>
+        <div class="flex items-center gap-2">
+          <button onclick="closeGeminiKeyModal()" class="min-h-[38px] px-3 py-1.5 rounded-lg bg-bg border border-border text-zinc-300 text-xs">Cancel</button>
+          <button onclick="saveGeminiApiKey()" class="min-h-[38px] px-4 py-1.5 rounded-lg bg-pastel hover:bg-pastel-light text-zinc-950 font-semibold text-xs">Save Key</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- CLIENT SCRIPT -->
   <script>
     /**
@@ -475,6 +515,7 @@
      * Example: 'https://script.google.com/macros/s/AKfycbx.../exec'
      */
     const APPS_SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzKt_uIwiFVfm3oIpA0x6bWAjZFw8ILA4aRIWZYPSLuvrKZnbrHbJKeHG-Kw_5nmJ8sEw/exec';
+    const DEFAULT_GEMINI_API_KEY = '';
 
     const ALL_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     const STORAGE_KEY = 'minimal_meal_planner_v4';
@@ -702,6 +743,8 @@
           else if (action === 'saveHistory') runner.saveHistoryToSheet(payload);
           else if (action === 'saveStaples') runner.saveStaplesToSheet(payload);
           else if (action === 'saveActivePlan') runner.saveActivePlanToSheet(payload);
+          else if (action === 'geminiPrep') runner.generateGeminiPrep(payload);
+          else if (action === 'geminiParsePdf') runner.parseRecipeWithGemini(payload);
         });
       }
       const url = getRemoteApiUrl();
@@ -715,6 +758,92 @@
       const json = await res.json();
       if (!json.ok) throw new Error(json.error || 'Backend error');
       return json.data;
+    }
+
+    function getStoredGeminiKey() {
+      return (localStorage.getItem('mp_gemini_api_key') || DEFAULT_GEMINI_API_KEY || '').trim();
+    }
+
+    function updateGeminiStatusPill() {
+      const pill = document.getElementById('gemini-status-pill');
+      if (!pill) return;
+      const hasLocalKey = Boolean(getStoredGeminiKey());
+      pill.textContent = hasLocalKey ? '✨ Gemini Key Active' : '✨ Gemini AI Ready';
+    }
+
+    function openGeminiKeyModal() {
+      const modal = document.getElementById('gemini-key-modal-backdrop');
+      const input = document.getElementById('input-gemini-api-key');
+      if (input) input.value = getStoredGeminiKey();
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+    }
+
+    function closeGeminiKeyModal() {
+      const modal = document.getElementById('gemini-key-modal-backdrop');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    function saveGeminiApiKey() {
+      const input = document.getElementById('input-gemini-api-key');
+      const val = input ? input.value.trim() : '';
+      if (val) {
+        localStorage.setItem('mp_gemini_api_key', val);
+        showToast('Saved Gemini API key!');
+      } else {
+        localStorage.removeItem('mp_gemini_api_key');
+        showToast('Cleared local Gemini key');
+      }
+      updateGeminiStatusPill();
+      closeGeminiKeyModal();
+    }
+
+    function clearGeminiApiKey() {
+      localStorage.removeItem('mp_gemini_api_key');
+      const input = document.getElementById('input-gemini-api-key');
+      if (input) input.value = '';
+      updateGeminiStatusPill();
+      closeGeminiKeyModal();
+      showToast('Cleared Gemini API key');
+    }
+
+    async function callGeminiDirectJson(prompt, responseSchema) {
+      const apiKey = getStoredGeminiKey() || "";
+      const canCallDirect = Boolean(apiKey) || window.location.hostname.includes('googleusercontent.com');
+      if (!canCallDirect) return null;
+
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+      const payload = {
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: responseSchema
+        }
+      };
+
+      let delay = 1000;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const res = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (text) return JSON.parse(text);
+          }
+        } catch (e) {}
+        await new Promise(r => setTimeout(r, delay));
+        delay *= 2;
+      }
+      return null;
     }
 
     function updateSyncStatus(msg, isConnected) {
@@ -806,6 +935,7 @@
         loadFreshDefaults();
       }
       applyThemeMode();
+      updateGeminiStatusPill();
       renderAll();
       if (hasBackendConnection()) {
         pullRecipesFromSheet(true);
@@ -2075,7 +2205,10 @@
                 <input id="edit-servings-${escapeHtml(recipe.id)}" type="number" value="${recipe.baseServings || 4}" class="min-h-[40px] px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-100">
               </div>
               <input id="edit-ingredients-${escapeHtml(recipe.id)}" type="text" value="${escapeHtml((recipe.ingredients || []).join(', '))}" class="w-full min-h-[40px] px-2.5 py-1.5 rounded-lg bg-bg border border-border text-xs text-zinc-100">
-              <input id="edit-prep-${escapeHtml(recipe.id)}" type="text" value="${escapeHtml((recipe.prep || []).join(', '))}" class="w-full min-h-[40px] px-2.5 py-1.5 rounded-lg bg-bg border border-border text-xs text-zinc-100">
+              <div class="flex items-center gap-2">
+                <input id="edit-prep-${escapeHtml(recipe.id)}" type="text" value="${escapeHtml((recipe.prep || []).join(', '))}" class="flex-1 min-h-[40px] px-2.5 py-1.5 rounded-lg bg-bg border border-border text-xs text-zinc-100">
+                <button id="btn-ai-prep-${escapeHtml(recipe.id)}" onclick="generateSmartPrepForForm('${escapeHtml(recipe.id)}')" class="min-h-[40px] px-3 py-1.5 rounded-lg bg-pastel-dim border border-pastel-border text-pastel-light hover:bg-pastel/20 font-medium text-xs transition shrink-0" title="Analyze ingredients & steps to generate Sunday prep tasks">✨ Auto-Prep</button>
+              </div>
               <textarea id="edit-instructions-${escapeHtml(recipe.id)}" rows="3" class="w-full px-2.5 py-2 rounded-lg bg-bg border border-border text-xs text-zinc-100">${escapeHtml(instructionsText)}</textarea>
               <div class="flex justify-end gap-2">
                 <button onclick="saveEditedRecipe('${escapeHtml(recipe.id)}')" class="min-h-[40px] px-4 py-2 rounded-lg bg-pastel text-zinc-950 font-semibold text-xs">✓ Save Changes</button>
@@ -2166,6 +2299,389 @@
       renderAll();
       showToast('Added recipe');
       if (hasBackendConnection()) callBackendPost('addRecipe', newRec);
+    }
+
+    function generateCulinarySmartPrep(name, ingredients, instructions) {
+      const tasks = [];
+      const seen = new Set();
+      const addTask = (t) => {
+        const clean = String(t || '').replace(/\s+/g, ' ').trim();
+        const key = clean.toLowerCase();
+        if (clean && !seen.has(key)) {
+          seen.add(key);
+          tasks.push(clean);
+        }
+      };
+
+      const stepsText = (instructions || []).join(' ');
+      const stepsLower = stepsText.toLowerCase();
+      const ingList = (ingredients || []).map(i => i.trim()).filter(Boolean);
+
+      // 1. Scan cooking steps for explicit prep verbs (dice, slice, cube, whisk, rinse, marinate, etc.)
+      (instructions || []).forEach(step => {
+        const clauses = step.split(/[.;]|,\s+(?:then|and)\s+/i);
+        clauses.forEach(clause => {
+          const c = clause.trim();
+          if (/^(?:rinse|wash|drain|press|peel|chop|dice|mince|slice|cube|julienne|halve|trim|snap|whisk|mix|marinate|grate|shred|scoop|hollow)\b/i.test(c) && c.length < 85) {
+            addTask(c.charAt(0).toUpperCase() + c.slice(1));
+          }
+        });
+      });
+
+      // 2. Analyze each ingredient + how it is used in the cooking instructions
+      ingList.forEach(rawIng => {
+        const parsed = parseScaledIngredient(rawIng, 1);
+        const item = (parsed.name || rawIng).toLowerCase();
+
+        // Proteins
+        if (/chicken breast|chicken thigh|chicken/.test(item)) {
+          if (/cube|bite-size|chunk/.test(stepsLower) || /cube/.test(item)) addTask('Cube chicken into 1-inch bite-sized pieces');
+          else if (/cutlet|strip|slice/.test(stepsLower)) addTask('Slice chicken into cutlets or strips');
+          else addTask('Trim and portion chicken in an airtight container');
+        } else if (/flank steak|sirloin|steak|beef/.test(item) && !/ground|broth/.test(item)) {
+          if (/thinly|against the grain|stir-fry/.test(stepsLower)) addTask('Slice steak thinly against the grain');
+          else if (/cube|bite/.test(stepsLower)) addTask('Cut steak into 1-inch cubes');
+          else addTask('Trim and portion steak for cooking');
+        } else if (/ground turkey|ground beef|ground pork|ground chicken/.test(item)) {
+          if (/marinara|brown/.test(stepsLower)) addTask(`Pre-brown ${parsed.name} or portion in fridge`);
+        } else if (/sausage/.test(item)) {
+          addTask('Slice sausage into 1/2-inch coins');
+        } else if (/tofu/.test(item)) {
+          addTask('Press tofu for 20 minutes and cut into cubes');
+        } else if (/salmon|fish|cod|tilapia|shrimp/.test(item)) {
+          if (/shrimp/.test(item)) addTask('Peel, devein, and pat dry shrimp');
+          else addTask('Portion fish fillets and pat dry');
+        }
+
+        // Produce & Vegetables
+        else if (/broccoli/.test(item)) addTask('Wash and chop broccoli into bite-sized florets');
+        else if (/bell pepper|pepper/.test(item) && !/black pepper|chili|flake/.test(item)) {
+          if (/dice/.test(stepsLower)) addTask('Core and dice bell peppers');
+          else addTask('Core and slice bell peppers into strips');
+        } else if (/onion|shallot/.test(item) && !/powder|green onion|scallion/.test(item)) {
+          if (/strip|slice|wedge/.test(stepsLower)) addTask(`Peel and slice ${parsed.name} into strips`);
+          else addTask(`Peel and dice ${parsed.name}`);
+        } else if (/garlic/.test(item) && !/powder/.test(item)) {
+          addTask('Peel and mince garlic cloves');
+        } else if (/sweet potato|potato/.test(item)) {
+          if (/halve|baby/.test(item) || /halve/.test(stepsLower)) addTask('Wash and halve baby potatoes');
+          else addTask(`Wash and dice ${parsed.name} into 3/4-inch cubes`);
+        } else if (/asparagus/.test(item)) addTask('Wash and snap woody ends off asparagus');
+        else if (/zucchini|squash/.test(item)) {
+          if (/boat|hollow|scoop/.test(stepsLower)) addTask('Halve zucchini lengthwise and scoop out centers');
+          else addTask('Wash and slice zucchini into half-moons');
+        } else if (/carrot/.test(item)) {
+          if (/matchstick|julienne/.test(stepsLower)) addTask('Peel and julienne carrots into matchsticks');
+          else addTask('Peel and slice carrots');
+        } else if (/snap pea|green bean|snow pea/.test(item)) addTask(`Wash and trim ends off ${parsed.name}`);
+        else if (/cucumber/.test(item)) addTask('Wash and dice cucumber');
+        else if (/cherry tomato|grape tomato|tomato/.test(item) && !/sun-dried|sauce|paste|canned/.test(item)) {
+          if (/cherry|grape|pint/.test(rawIng.toLowerCase())) addTask('Wash and halve cherry tomatoes');
+          else addTask('Wash and dice tomatoes');
+        } else if (/sun-dried tomato/.test(item)) addTask('Drain and julienne sun-dried tomatoes');
+        else if (/parsley|cilantro|basil|dill/.test(item) && !/dried/.test(item)) addTask(`Wash, dry, and chop fresh ${parsed.name}`);
+        else if (/lemon|lime/.test(item) && !/juice/.test(item)) {
+          if (/round|slice/.test(stepsLower)) addTask(`Slice ${parsed.name} into thin rounds`);
+          else addTask(`Wash ${parsed.name} for fresh juice/wedges`);
+        }
+
+        // Canned Goods, Beans & Grains
+        else if (/black bean|chickpea|garbanzo|kidney bean|cannellini|pinto bean/.test(item)) {
+          addTask(`Rinse and drain ${parsed.name}`);
+        } else if (/quinoa|brown rice|jasmine rice|white rice|farro/.test(item)) {
+          if (/brown rice|quinoa|farro/.test(item)) addTask(`Rinse ${parsed.name} (or batch-cook ahead for the week)`);
+          else addTask(`Measure out ${rawIng} for quick weeknight cooking`);
+        }
+      });
+
+      // 3. Detect if multiple sauce/dressing ingredients can be pre-whisked in a jar
+      const sauceMatches = ingList.filter(i => /(soy sauce|honey|broth|cornstarch|teriyaki|sesame oil|vinegar|olive oil|mustard|maple|sriracha)/i.test(i));
+      if (sauceMatches.length >= 2 && (/whisk|simmer|glaze|sauce|slurry|dressing|pour|toss/i.test(stepsLower))) {
+        const names = sauceMatches.slice(0, 3).map(s => parseScaledIngredient(s, 1).name).join(', ');
+        addTask(`Whisk ${names} in a sealed jar for the sauce/dressing`);
+      }
+
+      if (tasks.length === 0) {
+        addTask(`Wash and chop produce for ${name || 'recipe'}`);
+        addTask(`Portion proteins and measure dry ingredients for ${name || 'recipe'}`);
+      }
+
+      return tasks.slice(0, 5);
+    }
+
+    async function generateSmartPrepForForm(targetId) {
+      const isNew = targetId === 'new';
+      const nameEl = document.getElementById(isNew ? 'input-recipe-name' : `edit-name-${targetId}`);
+      const ingEl = document.getElementById(isNew ? 'input-recipe-ingredients' : `edit-ingredients-${targetId}`);
+      const prepEl = document.getElementById(isNew ? 'input-recipe-prep' : `edit-prep-${targetId}`);
+      const instEl = document.getElementById(isNew ? 'input-recipe-instructions' : `edit-instructions-${targetId}`);
+      const btn = document.getElementById(isNew ? 'btn-ai-prep-new' : `btn-ai-prep-${targetId}`);
+
+      if (!ingEl || !prepEl) return;
+      const name = nameEl ? nameEl.value.trim() : 'Recipe';
+      const ingredients = ingEl.value.split(',').map(s => s.trim()).filter(Boolean);
+      const instructions = instEl ? instEl.value.split('\n').map(s => s.trim()).filter(Boolean) : [];
+
+      if (ingredients.length === 0 && instructions.length === 0) {
+        showToast('Enter ingredients or cooking steps first');
+        return;
+      }
+
+      const origText = btn ? btn.textContent : '✨ Auto-Prep';
+      if (btn) btn.textContent = '✨ Thinking...';
+
+      try {
+        let aiTasks = null;
+        const prompt = `You are an expert Sunday meal-prep chef. Analyze this dinner recipe and return a JSON array of 3 to 4 specific, actionable Sunday advance-prep tasks that save time on weeknights (e.g., chopping hearty vegetables, slicing/cubing/marinating meat, whisking sauces in a sealed jar, rinsing beans/grains). Avoid prepping items that brown or spoil quickly like slicing avocados.
+Recipe: ${name}
+Ingredients: ${ingredients.join(', ')}
+Cooking Steps: ${instructions.join(' | ')}`;
+
+        // 1. Try direct Gemini API call (works in Canvas or when user adds a Gemini key)
+        const directResult = await callGeminiDirectJson(prompt, {
+          type: "ARRAY",
+          items: { type: "STRING" }
+        });
+        if (Array.isArray(directResult) && directResult.length > 0) {
+          aiTasks = directResult;
+        }
+
+        // 2. Try Apps Script backend proxy if direct key wasn't set
+        if (!aiTasks && hasBackendConnection()) {
+          try {
+            const backendRes = await callBackendPost('geminiPrep', { name, ingredients, instructions });
+            if (Array.isArray(backendRes) && backendRes.length > 0) {
+              aiTasks = backendRes;
+            }
+          } catch (e) {}
+        }
+
+        const usedGemini = Array.isArray(aiTasks) && aiTasks.length > 0;
+        const finalTasks = usedGemini ? aiTasks : generateCulinarySmartPrep(name, ingredients, instructions);
+        prepEl.value = finalTasks.join(', ');
+        showToast(usedGemini ? `✨ Gemini generated ${finalTasks.length} prep tasks!` : `Generated ${finalTasks.length} smart prep tasks!`);
+      } finally {
+        if (btn) btn.textContent = origText;
+      }
+    }
+
+    async function handleRecipePdfImport(event) {
+      const file = event && event.target && event.target.files ? event.target.files[0] : null;
+      if (!file) return;
+
+      const btn = document.getElementById('btn-import-pdf');
+      const origLabel = btn ? btn.textContent : '📄 Import PDF';
+      if (btn) btn.textContent = '⏳ Reading PDF...';
+
+      try {
+        if (typeof pdfjsLib === 'undefined') {
+          throw new Error('PDF reader library still loading. Try again in a moment.');
+        }
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const allLines = [];
+
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          const page = await pdf.getPage(pageNum);
+          const textContent = await page.getTextContent();
+          const lineBuckets = [];
+
+          textContent.items.forEach(item => {
+            const str = (item.str || '').trim();
+            if (!str) return;
+            const y = Math.round(item.transform[5]);
+            let bucket = lineBuckets.find(b => Math.abs(b.y - y) <= 4);
+            if (!bucket) {
+              bucket = { y, parts: [] };
+              lineBuckets.push(bucket);
+            }
+            bucket.parts.push({ x: item.transform[4], text: str });
+          });
+
+          lineBuckets.sort((a, b) => b.y - a.y);
+          lineBuckets.forEach(b => {
+            b.parts.sort((a, c) => a.x - c.x);
+            const lineText = b.parts.map(p => p.text).join(' ').replace(/\s+/g, ' ').trim();
+            if (lineText) allLines.push(lineText);
+          });
+        }
+
+        let parsed = null;
+        const rawPdfText = allLines.join('\n').slice(0, 12000);
+
+        // Try Gemini AI structured recipe + Sunday prep extraction first
+        const pdfPrompt = `Extract this recipe PDF text into structured JSON.
+Rules:
+- Convert any ingredient fractions (like 1/2, ¼, 1 1/2) into decimals (0.5, 0.25, 1.5) at the start of each ingredient string (e.g., "1.5 lbs chicken breast", "2 crowns broccoli"). Do not use commas inside an individual ingredient string.
+- Category should be one of: Poultry, Beef, Seafood, Pasta, Vegetarian, or Dinner.
+- Generate 3 to 4 practical Sunday meal-prep tasks in "prep" based on the ingredients and cooking steps.
+PDF Text:
+${rawPdfText}`;
+
+        const geminiSchema = {
+          type: "OBJECT",
+          properties: {
+            name: { type: "STRING" },
+            category: { type: "STRING" },
+            cookTime: { type: "NUMBER" },
+            baseServings: { type: "NUMBER" },
+            ingredients: { type: "ARRAY", items: { type: "STRING" } },
+            prep: { type: "ARRAY", items: { type: "STRING" } },
+            instructions: { type: "ARRAY", items: { type: "STRING" } }
+          },
+          propertyOrdering: ["name", "category", "cookTime", "baseServings", "ingredients", "prep", "instructions"]
+        };
+
+        if (btn) btn.textContent = '✨ Gemini parsing...';
+        const directPdfAi = await callGeminiDirectJson(pdfPrompt, geminiSchema);
+        if (directPdfAi && directPdfAi.name && Array.isArray(directPdfAi.ingredients) && directPdfAi.ingredients.length > 0) {
+          parsed = directPdfAi;
+        } else if (hasBackendConnection()) {
+          try {
+            const backendPdfAi = await callBackendPost('geminiParsePdf', { rawText: rawPdfText, filename: file.name });
+            if (backendPdfAi && backendPdfAi.name && Array.isArray(backendPdfAi.ingredients) && backendPdfAi.ingredients.length > 0) {
+              parsed = backendPdfAi;
+            }
+          } catch (e) {}
+        }
+
+        const usedGemini = Boolean(parsed);
+        if (!parsed) {
+          parsed = parseRecipeFromPdfLines(allLines, file.name);
+        }
+
+        document.getElementById('input-recipe-name').value = parsed.name || 'Imported Recipe';
+        document.getElementById('input-recipe-category').value = parsed.category || 'Dinner';
+        document.getElementById('input-recipe-time').value = Number(parsed.cookTime) || 30;
+        document.getElementById('input-recipe-servings').value = Number(parsed.baseServings) || 4;
+        document.getElementById('input-recipe-ingredients').value = (parsed.ingredients || []).join(', ');
+        document.getElementById('input-recipe-prep').value = (parsed.prep || []).join(', ');
+        document.getElementById('input-recipe-instructions').value = (parsed.instructions || []).join('\n');
+
+        showToast(usedGemini ? `✨ Gemini imported "${parsed.name}"!` : `Imported "${parsed.name}" — review & tap + Add Recipe`);
+      } catch (err) {
+        showToast('PDF import error: ' + (err.message || 'Could not read PDF'));
+      } finally {
+        if (btn) btn.textContent = origLabel;
+        event.target.value = '';
+      }
+    }
+
+    function parseRecipeFromPdfLines(lines, fallbackFilename) {
+      const cleanFallback = String(fallbackFilename || 'Imported Recipe')
+        .replace(/\.pdf$/i, '')
+        .replace(/[-_]+/g, ' ')
+        .trim();
+
+      const fullText = lines.join('\n');
+      let name = '';
+      let baseServings = 4;
+      let cookTime = 30;
+
+      const servMatch = fullText.match(/(?:servings?|serves|yield)\s*[:\-]?\s*(\d+)/i) ||
+                        fullText.match(/(\d+)\s+servings?/i);
+      if (servMatch) {
+        const s = parseInt(servMatch[1], 10);
+        if (s >= 1 && s <= 24) baseServings = s;
+      }
+
+      const hrMinMatch = fullText.match(/(?:total|cook|prep|time)[^.\n]{0,25}?(\d+)\s*(?:hr|hour)s?\s*(?:(\d+)\s*(?:min|minute|m)s?)?/i);
+      const minMatch = fullText.match(/(?:total\s*time|cook\s*time|active\s*time|time|ready\s*in)\s*[:\-]?\s*(\d+)\s*(?:min|minute|m)/i) ||
+                       fullText.match(/(\d+)\s*(?:mins?|minutes?)/i);
+      if (hrMinMatch) {
+        cookTime = (parseInt(hrMinMatch[1], 10) * 60) + (parseInt(hrMinMatch[2] || '0', 10));
+      } else if (minMatch) {
+        const m = parseInt(minMatch[1], 10);
+        if (m >= 5 && m <= 360) cookTime = m;
+      }
+
+      const ingredients = [];
+      const prep = [];
+      const instructions = [];
+      let section = 'header';
+
+      const ingHeaderRx = /^(?:ingredients?|what you(?:'ll)? need|shopping list)\s*:?$/i;
+      const prepHeaderRx = /^(?:sunday prep|meal prep|prep(?:aration)?(?:\s+tasks|\s+steps)?|before you cook)\s*:?$/i;
+      const instHeaderRx = /^(?:instructions?|directions?|method|steps?|preparation\s+and\s+cooking|how to make(?: it)?)\s*:?$/i;
+      const skipMetaRx = /^(?:servings?|serves|yield|prep\s*time|cook\s*time|total\s*time|active\s*time|course|cuisine|category|calories|author|source|page\s+\d+)/i;
+      const qtyLineRx = /^(?:[\u2022\-\*\▪\◦]\s*)?(?:\d+(?:\.\d+)?|\d+\/\d+|\d+\s+\d+\/\d+|[¼½¾⅓⅔⅛⅜⅝⅞])\s*(?:lbs?|pounds?|oz|ounces?|cups?|tbsp|tablespoons?|tsp|teaspoons?|cloves?|cans?|crowns?|bunch(?:es)?|pints?|fillets?|large|medium|small|g|kg|ml|l|packages?|pkg|stalks?|heads?|pieces?|slices?)?\b/i;
+
+      for (let i = 0; i < lines.length; i++) {
+        const raw = lines[i].trim();
+        if (!raw) continue;
+
+        if (ingHeaderRx.test(raw)) { section = 'ingredients'; continue; }
+        if (prepHeaderRx.test(raw)) { section = 'prep'; continue; }
+        if (instHeaderRx.test(raw)) { section = 'instructions'; continue; }
+
+        if (!name && section === 'header' && !skipMetaRx.test(raw) && raw.length > 2 && raw.length <= 85 && !qtyLineRx.test(raw)) {
+          name = raw.replace(/^recipe\s*[:\-]\s*/i, '').trim();
+          continue;
+        }
+
+        if (skipMetaRx.test(raw) && raw.length < 45) continue;
+
+        const cleanItem = raw
+          .replace(/^[\u2022\-\*\▪\◦\+]\s*/, '')
+          .replace(/^(?:step\s*)?\d+[\.\)]\s*/i, '')
+          .trim();
+        if (!cleanItem) continue;
+
+        if (section === 'ingredients') {
+          ingredients.push(cleanItem);
+        } else if (section === 'prep') {
+          prep.push(cleanItem);
+        } else if (section === 'instructions') {
+          instructions.push(cleanItem);
+        } else {
+          if (qtyLineRx.test(raw) && raw.length < 90) {
+            ingredients.push(cleanItem);
+          } else if (/^(?:step\s*\d+|\d+[\.\)]\s+[A-Z])/i.test(raw) || raw.length > 75) {
+            instructions.push(cleanItem);
+          }
+        }
+      }
+
+      const normalizedIngredients = ingredients.map(ing =>
+        ing
+          .replace(/¼/g, '0.25').replace(/½/g, '0.5').replace(/¾/g, '0.75')
+          .replace(/⅓/g, '0.33').replace(/⅔/g, '0.67')
+          .replace(/(\d+)\s+1\/2\b/g, '$1.5')
+          .replace(/(\d+)\s+1\/4\b/g, '$1.25')
+          .replace(/(\d+)\s+3\/4\b/g, '$1.75')
+          .replace(/\b1\/2\b/g, '0.5')
+          .replace(/\b1\/4\b/g, '0.25')
+          .replace(/\b3\/4\b/g, '0.75')
+          .replace(/\b1\/3\b/g, '0.33')
+          .replace(/\b2\/3\b/g, '0.67')
+          .replace(/,/g, ' -')
+          .trim()
+      ).filter(Boolean);
+
+      if (prep.length === 0 && normalizedIngredients.length > 0) {
+        const smartTasks = generateCulinarySmartPrep(name || cleanFallback, normalizedIngredients, instructions);
+        smartTasks.forEach(t => prep.push(t));
+      }
+
+      const combinedLower = (name + ' ' + normalizedIngredients.join(' ')).toLowerCase();
+      let category = 'Dinner';
+      if (/(chicken|turkey|poultry)/.test(combinedLower)) category = 'Poultry';
+      else if (/(beef|steak|sirloin|flank|brisket|chuck)/.test(combinedLower)) category = 'Beef';
+      else if (/(salmon|shrimp|fish|cod|tilapia|tuna|scallop|seafood)/.test(combinedLower)) category = 'Seafood';
+      else if (/(pasta|penne|spaghetti|fettuccine|linguine|macaroni|noodle|lasagna|ravioli|orzo)/.test(combinedLower)) category = 'Pasta';
+      else if (/(tofu|lentil|chickpea|black bean|vegetarian|vegan|veggie)/.test(combinedLower)) category = 'Vegetarian';
+
+      return {
+        name: name || cleanFallback || 'Imported Recipe',
+        category,
+        cookTime,
+        baseServings,
+        ingredients: normalizedIngredients,
+        prep: prep.length ? prep : [`Prep ingredients for ${name || cleanFallback}`],
+        instructions: instructions.length ? instructions : [`Follow PDF instructions for ${name || cleanFallback}.`]
+      };
     }
 
     function deleteRecipe(id) {
