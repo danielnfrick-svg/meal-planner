@@ -312,85 +312,57 @@
             <button onclick="resetDefaultStaples()" class="min-h-[34px] px-2 text-xs text-zinc-400 hover:text-pastel-light transition">↺ Restore Defaults</button>
           </div>
           <div class="flex items-center gap-2">
-            <input id="input-new-staple" type="text" placeholder="Add staple item..." onkeydown="if(event.key==='Enter') addPantryStapleFromInput()" class="flex-1 min-h-[40px] px-3 py-2 rounded-lg bg-bg border border-border text-xs text-zinc-100 focus:outline-none focus:border-pastel">
-            <button onclick="addPantryStapleFromInput()" class="min-h-[40px] px-4 py-2 rounded-lg bg-pastel hover:bg-pastel-light text-zinc-950 font-semibold text-xs transition shrink-0">+ Add</button>
+            <input id="input-new-staple" type="text" placeholder="Add staple (e.g., olive oil, salt)..." onkeydown="if(event.key==='Enter') addPantryStapleFromInput()" class="flex-1 min-h-[40px] px-3 py-2 rounded-lg bg-bg border border-border text-xs text-zinc-100 focus:outline-none focus:border-pastel">
+            <button onclick="addPantryStapleFromInput()" class="min-h-[40px] px-3.5 py-2 rounded-lg bg-pastel text-zinc-950 font-semibold text-xs">+ Staple</button>
           </div>
-          <div id="pantry-staples-pills" class="flex flex-wrap gap-2"></div>
+          <div id="pantry-staples-pills" class="flex flex-wrap gap-1.5 pt-1"></div>
+        </div>
+
+        <div id="hidden-staples-banner" class="hidden px-3 py-2 rounded-lg bg-bg/70 border border-border text-[11px] text-zinc-400">
+          <span>Hiding <strong id="hidden-staples-count" class="text-pastel-light">0</strong> pantry staple(s): </span>
+          <span id="hidden-staples-names" class="font-mono text-zinc-300"></span>
         </div>
       </div>
 
-      <div id="hidden-staples-banner" class="hidden px-3.5 py-2.5 rounded-xl bg-card/70 border border-dashed border-border flex items-center justify-between gap-2 text-xs">
-        <div class="text-zinc-400 truncate">
-          <span class="text-pastel-light font-mono font-semibold" id="hidden-staples-count">0</span> staple(s) hidden: <span id="hidden-staples-names" class="text-zinc-300 font-medium"></span>
-        </div>
-        <button onclick="toggleHidePantryStaples()" class="min-h-[34px] px-2.5 text-xs text-pastel-light hover:underline shrink-0">Show</button>
-      </div>
-
-      <div id="grocery-items-container" class="bg-card border border-border rounded-xl divide-y divide-border/60 overflow-hidden"></div>
+      <div id="grocery-items-container" class="bg-card border border-border rounded-xl overflow-hidden divide-y divide-border"></div>
     </section>
 
     <!-- 3. PREP TAB -->
     <section id="view-prep" class="hidden space-y-3">
-      <div class="bg-card border border-border rounded-xl p-3 sm:p-4 flex items-center justify-between gap-3">
+      <div class="bg-card border border-border rounded-xl p-3 sm:p-4 flex items-center justify-between gap-2">
         <div>
-          <h2 class="text-sm font-semibold text-zinc-100">Sunday Batch Prep</h2>
-          <p class="text-[11px] text-zinc-400">Grouped by task category.</p>
+          <h2 class="text-sm font-semibold text-zinc-100">Sunday Prep Checklist</h2>
+          <p class="text-[11px] text-zinc-400">Grouped by prep type for faster batching.</p>
         </div>
         <button onclick="uncheckAllPrep()" class="min-h-[38px] px-3 py-1.5 rounded-lg bg-bg border border-border text-zinc-400 hover:text-zinc-200 text-xs transition shrink-0">Reset Checks</button>
       </div>
-      <div id="prep-items-container" class="space-y-2.5"></div>
+      <div id="prep-items-container" class="space-y-3"></div>
     </section>
 
     <!-- 4. RECIPES TAB -->
     <section id="view-recipes" class="hidden space-y-3">
-      <div class="bg-card border border-border rounded-xl p-3 sm:p-4 space-y-2.5">
-        <div class="flex items-center justify-between">
-          <h2 class="text-sm font-semibold text-pastel-light">+ Add New Recipe</h2>
-          <button onclick="resetToDefaultRecipes()" class="min-h-[34px] px-2 text-xs text-zinc-400 hover:text-pastel-light transition">↺ Reset to 10 Defaults</button>
+      <div class="bg-card border border-border rounded-xl p-3.5 sm:p-4 space-y-3">
+        <div class="flex items-center justify-between gap-2">
+          <div>
+            <h2 class="text-sm font-semibold text-zinc-100">Add New Recipe</h2>
+            <p class="text-[11px] text-zinc-400">Automatically syncs to your Google Sheet.</p>
+          </div>
+          <button onclick="resetToDefaultRecipes()" class="min-h-[36px] px-2.5 py-1 rounded-lg bg-bg border border-border text-zinc-400 hover:text-pastel-light text-xs transition">↺ Restore 10 Defaults</button>
         </div>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-          <div class="col-span-2 sm:col-span-1">
-            <label class="block text-[11px] text-zinc-400 mb-1">Recipe Name</label>
-            <input id="input-recipe-name" type="text" placeholder="e.g., Garlic Shrimp" class="w-full min-h-[40px] px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel">
-          </div>
-          <div>
-            <label class="block text-[11px] text-zinc-400 mb-1">Category</label>
-            <select id="input-recipe-category" class="w-full min-h-[40px] px-2 py-1.5 rounded-lg bg-bg border border-border text-zinc-200 focus:outline-none focus:border-pastel">
-              <option value="Poultry">Poultry</option>
-              <option value="Beef">Beef</option>
-              <option value="Pasta">Pasta</option>
-              <option value="Seafood">Seafood</option>
-              <option value="Vegetarian">Vegetarian</option>
-              <option value="Custom">Custom</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-[11px] text-zinc-400 mb-1">Cook Time (m)</label>
-            <input id="input-recipe-time" type="number" min="5" max="480" step="5" value="30" class="w-full min-h-[40px] px-2 py-1.5 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel">
-          </div>
-          <div class="col-span-2 sm:col-span-1">
-            <label class="block text-[11px] text-zinc-400 mb-1">Base Servings</label>
-            <input id="input-recipe-servings" type="number" min="1" max="12" value="4" class="w-full min-h-[40px] px-2 py-1.5 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel">
-          </div>
+          <input id="input-recipe-name" type="text" placeholder="Recipe Name *" class="col-span-2 sm:col-span-1 min-h-[40px] px-3 py-2 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel">
+          <input id="input-recipe-category" type="text" placeholder="Category (Poultry, Beef...)" class="min-h-[40px] px-3 py-2 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel">
+          <input id="input-recipe-time" type="number" placeholder="Cook Time (mins)" value="30" class="min-h-[40px] px-3 py-2 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel">
+          <input id="input-recipe-servings" type="number" placeholder="Base Servings" value="4" class="min-h-[40px] px-3 py-2 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel">
         </div>
-        <div class="space-y-2 text-xs">
-          <div>
-            <label class="block text-[11px] text-zinc-400 mb-1">Ingredients (comma-separated)</label>
-            <input id="input-recipe-ingredients" type="text" placeholder="1 lb shrimp, 3 cloves garlic, 2 tbsp butter, 1 cup rice" class="w-full min-h-[40px] px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel">
-          </div>
-          <div>
-            <label class="block text-[11px] text-zinc-400 mb-1">Sunday Prep Tasks (comma-separated)</label>
-            <input id="input-recipe-prep" type="text" placeholder="Peel shrimp, Mince garlic" class="w-full min-h-[40px] px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel">
-          </div>
-          <div>
-            <label class="block text-[11px] text-zinc-400 mb-1">Step-by-Step Cooking Directions (one step per line)</label>
-            <textarea id="input-recipe-instructions" rows="2" placeholder="1. Cook rice.&#10;2. Sear shrimp in garlic butter." class="w-full px-2.5 py-2 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel resize-y"></textarea>
-          </div>
-        </div>
+        <input id="input-recipe-ingredients" type="text" placeholder="Ingredients (comma-separated, e.g., 1.5 lbs chicken breast, 2 crowns broccoli) *" class="w-full min-h-[40px] px-3 py-2 rounded-lg bg-bg border border-border text-xs text-zinc-100 focus:outline-none focus:border-pastel">
+        <input id="input-recipe-prep" type="text" placeholder="Sunday Prep tasks (comma-separated, e.g., Cube chicken, Chop broccoli)" class="w-full min-h-[40px] px-3 py-2 rounded-lg bg-bg border border-border text-xs text-zinc-100 focus:outline-none focus:border-pastel">
+        <textarea id="input-recipe-instructions" rows="3" placeholder="Cooking steps (one step per line)..." class="w-full px-3 py-2 rounded-lg bg-bg border border-border text-xs text-zinc-100 focus:outline-none focus:border-pastel"></textarea>
         <div class="flex justify-end">
-          <button onclick="addNewRecipe()" class="min-h-[40px] px-4 py-2 rounded-lg bg-pastel hover:bg-pastel-light text-zinc-950 font-semibold text-xs transition">+ Save Recipe</button>
+          <button onclick="addNewRecipe()" class="min-h-[40px] px-4 py-2 rounded-lg bg-pastel hover:bg-pastel-light text-zinc-950 font-semibold text-xs transition">+ Add Recipe</button>
         </div>
       </div>
+
       <div id="recipes-list-container" class="space-y-2.5"></div>
     </section>
 
@@ -398,11 +370,13 @@
     <section id="view-history" class="hidden space-y-3">
       <div class="bg-card border border-border rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
         <div>
-          <h2 class="text-sm font-semibold text-zinc-100">Saved Weekly Plans</h2>
+          <div class="flex items-center gap-2">
+            <h2 class="text-sm font-semibold text-zinc-100">Saved Weekly Plans</h2>
+          </div>
           <p class="text-[11px] text-zinc-400">Tap any meal for its recipe, or expand a week's Groceries & Prep.</p>
         </div>
         <div class="flex items-center gap-2 shrink-0">
-          <button id="btn-clear-all-history" onclick="clearAllHistoryPlans()" class="min-h-[38px] px-3 py-2 rounded-lg bg-bg border border-border text-zinc-400 hover:text-red-400 hover:border-red-500/40 font-medium text-xs transition">🗑️ Clear All</button>
+          <button id="btn-clear-all-history" onclick="openClearHistoryModal()" class="min-h-[38px] px-3 py-2 rounded-lg bg-bg border border-border text-zinc-400 hover:text-red-400 hover:border-red-500/40 font-medium text-xs transition">🗑️ Clear All</button>
           <button onclick="saveManualPlanSnapshot()" class="min-h-[38px] px-3.5 py-2 rounded-lg bg-pastel hover:bg-pastel-light text-zinc-950 font-semibold text-xs transition">💾 Save Week</button>
         </div>
       </div>
@@ -411,6 +385,18 @@
 
     </div>
   </main>
+
+  <!-- CLEAR HISTORY CONFIRMATION MODAL -->
+  <div id="clear-history-modal-backdrop" onclick="closeClearHistoryModal()" class="fixed inset-0 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+    <div onclick="event.stopPropagation()" class="bg-card border border-border rounded-2xl max-w-sm w-full p-4 space-y-3 shadow-2xl">
+      <h3 class="text-sm font-semibold text-zinc-100">Clear All Saved History?</h3>
+      <p class="text-xs text-zinc-400">This will permanently remove all saved weekly plans from your History tab and Google Sheet.</p>
+      <div class="flex items-center justify-end gap-2 pt-1">
+        <button onclick="closeClearHistoryModal()" class="min-h-[38px] px-3.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-300 text-xs font-medium">Cancel</button>
+        <button onclick="confirmClearAllHistoryPlans()" class="min-h-[38px] px-3.5 py-1.5 rounded-lg bg-red-500 hover:bg-red-400 text-zinc-950 text-xs font-semibold">🗑️ Clear All</button>
+      </div>
+    </div>
+  </div>
 
   <!-- TOAST -->
   <div id="toast" class="fixed bottom-3 left-3 right-3 sm:left-auto sm:right-5 sm:bottom-5 hidden items-center justify-center sm:justify-start gap-2 px-3.5 py-2.5 rounded-xl bg-zinc-900/95 backdrop-blur border border-pastel-border text-xs text-pastel-light shadow-2xl z-50">
@@ -462,6 +448,8 @@
     const AUTO_SYNC_INTERVAL_MS = 30000; // 30 seconds
     let autoSyncTimer = null;
     let isSyncInProgress = false;
+    let lastLocalChangeTime = 0;
+    let activePlanSyncTimeout = null;
 
     const DEFAULT_PANTRY_STAPLES = [
       'butter', 'olive oil', 'vegetable oil', 'sesame oil', 'soy sauce',
@@ -648,7 +636,8 @@
       checkedGroceries: {},
       checkedPrep: {},
       planHistory: [],
-      expandedHistoryIds: {}
+      expandedHistoryIds: {},
+      updatedAt: 0
     };
 
     function isAppsScriptEnv() {
@@ -678,12 +667,14 @@
           else if (action === 'sendEmail') runner.sendWeeklyPlanEmail(payload);
           else if (action === 'saveHistory') runner.saveHistoryToSheet(payload);
           else if (action === 'saveStaples') runner.saveStaplesToSheet(payload);
+          else if (action === 'saveActivePlan') runner.saveActivePlanToSheet(payload);
         });
       }
       const url = getRemoteApiUrl();
       if (!url) return null;
       const res = await fetch(url, {
         method: 'POST',
+        redirect: 'follow',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action, payload })
       });
@@ -720,9 +711,17 @@
         if (document.hidden) return;
         if (!hasBackendConnection()) return;
         if (isUserActivelyTyping()) return;
+        // Wait if user made a local change in the last 4 seconds so background push finishes first
+        if (Date.now() - lastLocalChangeTime < 4000) return;
         pullRecipesFromSheet(true);
       }, AUTO_SYNC_INTERVAL_MS);
     }
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && hasBackendConnection() && !isUserActivelyTyping()) {
+        pullRecipesFromSheet(true);
+      }
+    });
 
     function applyThemeMode() {
       const htmlEl = document.documentElement;
@@ -776,6 +775,8 @@
       renderAll();
       if (hasBackendConnection()) {
         pullRecipesFromSheet(true);
+      } else {
+        updateSyncStatus('Local mode (add /exec URL to sync)', false);
       }
       startAutoSyncTimer();
     }
@@ -799,7 +800,7 @@
       });
       state.checkedGroceries = {};
       state.checkedPrep = {};
-      saveState();
+      saveState(false);
     }
 
     function ensureValidSchedule() {
@@ -812,10 +813,69 @@
       });
     }
 
-    function saveState() {
+    function saveState(syncActiveState = true) {
       try {
+        if (syncActiveState) {
+          state.updatedAt = Date.now();
+          lastLocalChangeTime = state.updatedAt;
+        }
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        if (syncActiveState && hasBackendConnection()) {
+          queueActivePlanSync();
+        }
       } catch (e) {}
+    }
+
+    function queueActivePlanSync() {
+      if (activePlanSyncTimeout) clearTimeout(activePlanSyncTimeout);
+      activePlanSyncTimeout = setTimeout(() => {
+        syncActivePlanToSheet();
+      }, 800);
+    }
+
+    function syncActivePlanToSheet() {
+      if (!hasBackendConnection()) return;
+      const activePlanPayload = {
+        updatedAt: state.updatedAt || Date.now(),
+        people: state.people,
+        daysCount: state.daysCount,
+        doubleDayCooking: state.doubleDayCooking,
+        balancedVariety: state.balancedVariety,
+        maxCookTime: state.maxCookTime,
+        hidePantryStaples: state.hidePantryStaples,
+        schedule: state.schedule,
+        lockedDays: state.lockedDays,
+        extraGroceries: state.extraGroceries,
+        checkedGroceries: state.checkedGroceries,
+        checkedPrep: state.checkedPrep
+      };
+      callBackendPost('saveActivePlan', activePlanPayload)
+        .then(() => {
+          const timeStr = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' });
+          updateSyncStatus('Saved & synced ' + timeStr, true);
+        })
+        .catch(err => console.warn('Active plan sync skipped:', err));
+    }
+
+    function applyRemoteActivePlan(remotePlan) {
+      if (!remotePlan || typeof remotePlan !== 'object') return;
+      const remoteTime = Number(remotePlan.updatedAt) || 0;
+      const localTime = Number(state.updatedAt) || 0;
+      if (remoteTime > 0 && localTime > 0 && remoteTime < localTime) {
+        return;
+      }
+      if (remotePlan.people) state.people = Number(remotePlan.people) || 2;
+      if (remotePlan.daysCount) state.daysCount = Number(remotePlan.daysCount) || 5;
+      if (typeof remotePlan.doubleDayCooking === 'boolean') state.doubleDayCooking = remotePlan.doubleDayCooking;
+      if (typeof remotePlan.balancedVariety === 'boolean') state.balancedVariety = remotePlan.balancedVariety;
+      if (remotePlan.maxCookTime !== undefined) state.maxCookTime = Number(remotePlan.maxCookTime) || 0;
+      if (typeof remotePlan.hidePantryStaples === 'boolean') state.hidePantryStaples = remotePlan.hidePantryStaples;
+      if (remotePlan.schedule && typeof remotePlan.schedule === 'object') state.schedule = remotePlan.schedule;
+      if (remotePlan.lockedDays && typeof remotePlan.lockedDays === 'object') state.lockedDays = remotePlan.lockedDays;
+      if (Array.isArray(remotePlan.extraGroceries)) state.extraGroceries = remotePlan.extraGroceries;
+      if (remotePlan.checkedGroceries && typeof remotePlan.checkedGroceries === 'object') state.checkedGroceries = remotePlan.checkedGroceries;
+      if (remotePlan.checkedPrep && typeof remotePlan.checkedPrep === 'object') state.checkedPrep = remotePlan.checkedPrep;
+      if (remoteTime) state.updatedAt = remoteTime;
     }
 
     function syncStaplesToSheet() {
@@ -829,7 +889,7 @@
         .withSuccessHandler(sheetStaples => {
           if (Array.isArray(sheetStaples)) {
             state.pantryStaples = sheetStaples;
-            saveState();
+            saveState(false);
             renderGroceryList();
           } else if (Array.isArray(state.pantryStaples) && state.pantryStaples.length > 0) {
             syncStaplesToSheet();
@@ -850,7 +910,7 @@
         .withSuccessHandler(sheetHistory => {
           if (Array.isArray(sheetHistory)) {
             state.planHistory = sheetHistory;
-            saveState();
+            saveState(false);
             renderHistory();
             const histBadge = document.getElementById('history-count-badge');
             if (histBadge) histBadge.textContent = state.planHistory.length;
@@ -923,10 +983,10 @@
             if (Array.isArray(sheetRecipes) && sheetRecipes.length > 0) {
               state.recipes = sheetRecipes;
               ensureValidSchedule();
-              saveState();
+              saveState(false);
               if (!isUserActivelyTyping()) renderAll();
-              const timeStr = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-              updateSyncStatus('Auto-synced ' + timeStr, true);
+              const timeStr = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' });
+              updateSyncStatus('Synced ' + timeStr, true);
             }
           })
           .withFailureHandler(err => {
@@ -936,12 +996,25 @@
           .getRecipesFromSheet();
         pullStaplesFromSheet();
         pullHistoryFromSheet();
+        if (google.script.run.getActivePlanFromSheet) {
+          google.script.run
+            .withSuccessHandler(remotePlan => {
+              if (remotePlan) {
+                applyRemoteActivePlan(remotePlan);
+                saveState(false);
+                if (!isUserActivelyTyping()) renderAll();
+              }
+            })
+            .withFailureHandler(() => {})
+            .getActivePlanFromSheet();
+        }
         return;
       }
 
       const url = getRemoteApiUrl();
       if (!url) {
         isSyncInProgress = false;
+        updateSyncStatus('No Apps Script URL set', false);
         if (!isSilentAutoSync) {
           showToast('Paste your Apps Script /exec URL into APPS_SCRIPT_WEB_APP_URL first');
         }
@@ -950,13 +1023,17 @@
 
       try {
         if (!isSilentAutoSync) updateSyncStatus('Syncing from Sheet...', false);
-        const res = await fetch(url + '?action=syncAll');
+        const separator = url.includes('?') ? '&' : '?';
+        const res = await fetch(`${url}${separator}action=syncAll&_t=${Date.now()}`, {
+          method: 'GET',
+          redirect: 'follow',
+          cache: 'no-store'
+        });
         const json = await res.json();
         if (!json.ok) throw new Error(json.error || 'Sync failed');
 
         if (Array.isArray(json.recipes) && json.recipes.length > 0) {
           state.recipes = json.recipes;
-          ensureValidSchedule();
         }
         if (Array.isArray(json.history)) {
           state.planHistory = json.history;
@@ -966,13 +1043,19 @@
         } else if (Array.isArray(state.pantryStaples) && state.pantryStaples.length > 0) {
           syncStaplesToSheet();
         }
+        if (json.activePlan) {
+          applyRemoteActivePlan(json.activePlan);
+        } else {
+          syncActivePlanToSheet();
+        }
 
-        saveState();
+        ensureValidSchedule();
+        saveState(false);
         if (!isUserActivelyTyping()) renderAll();
-        const timeStr = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-        updateSyncStatus('Auto-synced ' + timeStr, true);
+        const timeStr = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' });
+        updateSyncStatus('Synced ' + timeStr, true);
       } catch (err) {
-        if (!isSilentAutoSync) updateSyncStatus('Sync error: ' + err.message, false);
+        updateSyncStatus('Sync error — check /exec URL', false);
       } finally {
         isSyncInProgress = false;
       }
@@ -994,7 +1077,7 @@
       });
       const mainScroll = document.getElementById('main-scroll-container');
       if (mainScroll) mainScroll.scrollTop = 0;
-      saveState();
+      saveState(false);
     }
 
     function adjustPeople(delta) {
@@ -2107,22 +2190,38 @@
 
     function deleteHistoryPlan(planId) {
       state.planHistory = (state.planHistory || []).filter(p => p.id !== planId);
-      saveState();
+      saveState(false);
       syncHistoryToSheet();
       renderHistory();
     }
 
-    function clearAllHistoryPlans() {
+    function openClearHistoryModal() {
       if (!Array.isArray(state.planHistory) || state.planHistory.length === 0) {
         showToast('History is already empty');
         return;
       }
-      if (!confirm('Clear all saved weekly plans from History?')) return;
+      const modal = document.getElementById('clear-history-modal-backdrop');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+    }
+
+    function closeClearHistoryModal() {
+      const modal = document.getElementById('clear-history-modal-backdrop');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    function confirmClearAllHistoryPlans() {
       state.planHistory = [];
       state.expandedHistoryIds = {};
-      saveState();
+      saveState(false);
       syncHistoryToSheet();
       renderHistory();
+      closeClearHistoryModal();
       showToast('Cleared all saved history');
     }
 
@@ -2171,15 +2270,24 @@
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-              ${(plan.scheduleSummary || []).map(s => `
-                <div class="p-2.5 rounded-lg bg-bg border border-border/80 flex items-center justify-between gap-2 text-xs">
-                  <div class="min-w-0 flex-1">
-                    <span class="font-mono text-[10px] text-pastel-light uppercase">${escapeHtml(s.day)}</span>
-                    <button onclick="openRecipeModal('${escapeHtml(s.recipeId || '')}', '${escapeHtml(s.mealName)}')" class="min-h-[32px] w-full flex items-center text-left font-medium text-zinc-200 hover:text-pastel-light truncate">${escapeHtml(s.mealName)} 📖</button>
+              ${(plan.scheduleSummary || []).map(s => {
+                const isReheat = s.mode === 'Reheat Leftovers' || String(s.details || '').toLowerCase().startsWith('from ');
+                const isBatch = s.mode === '2-Night Batch Cook';
+                return `
+                  <div class="p-2.5 rounded-lg ${isReheat ? 'bg-bg/40 border border-dashed border-border/70 opacity-85' : 'bg-bg border border-border/80'} flex items-center justify-between gap-2 text-xs">
+                    <div class="min-w-0 flex-1">
+                      <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="font-mono text-[10px] ${isReheat ? 'text-zinc-400' : 'text-pastel-light'} uppercase font-semibold">${escapeHtml(s.day)}</span>
+                        ${isReheat
+                          ? `<span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-pastel-dim text-pastel-light border border-pastel-border">♻️ Reheat (${escapeHtml(s.details)})</span>`
+                          : `<span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800/90 text-zinc-300">${isBatch ? '🔥 2x • ' : '🍳 '}${escapeHtml(s.details)}</span>`
+                        }
+                      </div>
+                      <button onclick="openRecipeModal('${escapeHtml(s.recipeId || '')}', '${escapeHtml(s.mealName)}')" class="min-h-[30px] w-full flex items-center text-left font-medium ${isReheat ? 'text-zinc-400' : 'text-zinc-100'} hover:text-pastel-light truncate mt-0.5">${escapeHtml(s.mealName)} 📖</button>
+                    </div>
                   </div>
-                  <span class="text-[10px] font-mono text-zinc-400 shrink-0">${escapeHtml(s.details)}</span>
-                </div>
-              `).join('')}
+                `;
+              }).join('')}
             </div>
 
             ${isExpanded ? `
