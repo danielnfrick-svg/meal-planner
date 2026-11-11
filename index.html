@@ -398,6 +398,39 @@
     </div>
   </div>
 
+  <!-- MEAL PICKER MODAL (MOBILE-OPTIMIZED) -->
+  <div id="meal-picker-modal-backdrop" onclick="closeDayMealPicker()" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-end sm:items-center justify-center p-0 sm:p-4 z-50">
+    <div onclick="event.stopPropagation()" class="bg-card border-t sm:border border-pastel-border rounded-t-2xl sm:rounded-2xl max-w-lg w-full h-[82dvh] sm:h-auto sm:max-h-[85dvh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="px-4 py-3.5 border-b border-border flex items-center justify-between gap-3 bg-zinc-900/60 shrink-0">
+        <div>
+          <h3 id="meal-picker-modal-title" class="text-sm sm:text-base font-semibold text-zinc-100">Choose Meal</h3>
+          <p class="text-[11px] text-zinc-400">Tap any recipe below to assign it to this day</p>
+        </div>
+        <button onclick="closeDayMealPicker()" class="min-h-[38px] min-w-[38px] flex items-center justify-center rounded-xl bg-bg border border-border text-zinc-300 hover:text-zinc-100 text-sm transition shrink-0">✕</button>
+      </div>
+
+      <div class="p-3 sm:p-3.5 border-b border-border space-y-2.5 shrink-0 bg-bg/40">
+        <div class="relative flex items-center">
+          <input
+            id="meal-picker-search-input"
+            type="text"
+            placeholder="🔍 Search meal name or ingredient..."
+            oninput="filterMealPickerModal(this.value)"
+            class="w-full min-h-[42px] pl-3.5 pr-9 py-2 rounded-xl bg-bg border border-border text-xs sm:text-sm text-zinc-100 focus:outline-none focus:border-pastel"
+          >
+          <button
+            id="meal-picker-clear-btn"
+            onclick="clearMealPickerSearch()"
+            class="hidden absolute right-2 min-h-[30px] min-w-[30px] items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-200 text-xs"
+          >✕</button>
+        </div>
+        <div id="meal-picker-categories" class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar"></div>
+      </div>
+
+      <div id="meal-picker-options-list" class="flex-1 overflow-y-auto p-3 sm:p-3.5 space-y-2 overscroll-contain"></div>
+    </div>
+  </div>
+
   <!-- TOAST -->
   <div id="toast" class="fixed bottom-3 left-3 right-3 sm:left-auto sm:right-5 sm:bottom-5 hidden items-center justify-center sm:justify-start gap-2 px-3.5 py-2.5 rounded-xl bg-zinc-900/95 backdrop-blur border border-pastel-border text-xs text-pastel-light shadow-2xl z-50">
     <span>✓</span>
@@ -626,6 +659,7 @@
       fridgeQuery: '',
       openMealPickerDay: null,
       mealPickerQuery: '',
+      mealPickerCategory: 'All',
       pantryStaples: [...DEFAULT_PANTRY_STAPLES],
       extraGroceries: [],
       recipes: [],
@@ -1127,46 +1161,106 @@
       state.schedule[day] = String(recipeId);
       state.openMealPickerDay = null;
       state.mealPickerQuery = '';
+      state.mealPickerCategory = 'All';
+      const modal = document.getElementById('meal-picker-modal-backdrop');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
       saveState();
       renderAll();
+      const rec = getRecipeById(recipeId);
+      if (rec) showToast(`${day}: ${rec.name}`);
     }
 
     function toggleDayMealPicker(day, event) {
       if (event) event.stopPropagation();
-      if (state.openMealPickerDay === day) {
-        state.openMealPickerDay = null;
-        state.mealPickerQuery = '';
-      } else {
-        state.openMealPickerDay = day;
-        state.mealPickerQuery = '';
+      state.openMealPickerDay = day;
+      state.mealPickerQuery = '';
+      state.mealPickerCategory = 'All';
+
+      const modal = document.getElementById('meal-picker-modal-backdrop');
+      const titleEl = document.getElementById('meal-picker-modal-title');
+      const searchInput = document.getElementById('meal-picker-search-input');
+      if (titleEl) titleEl.textContent = `Choose Meal for ${day}`;
+      if (searchInput) searchInput.value = '';
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
       }
-      renderPlanner();
-      if (state.openMealPickerDay) {
-        setTimeout(() => {
-          const input = document.getElementById(`meal-picker-input-${day}`);
-          if (input) input.focus();
-        }, 20);
-      }
+      renderMealPickerModalContent();
     }
 
     function closeDayMealPicker() {
-      if (!state.openMealPickerDay) return;
       state.openMealPickerDay = null;
       state.mealPickerQuery = '';
-      renderPlanner();
+      state.mealPickerCategory = 'All';
+      const modal = document.getElementById('meal-picker-modal-backdrop');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
     }
 
-    function filterMealPickerOptions(day, query) {
+    function setMealPickerCategory(cat) {
+      state.mealPickerCategory = cat || 'All';
+      renderMealPickerModalContent();
+    }
+
+    function clearMealPickerSearch() {
+      state.mealPickerQuery = '';
+      const searchInput = document.getElementById('meal-picker-search-input');
+      if (searchInput) searchInput.value = '';
+      renderMealPickerModalContent();
+    }
+
+    function filterMealPickerModal(query) {
       state.mealPickerQuery = query || '';
-      const listEl = document.getElementById(`meal-picker-list-${day}`);
+      renderMealPickerModalContent();
+    }
+
+    function renderMealPickerModalContent() {
+      const day = state.openMealPickerDay;
+      if (!day) return;
+
+      const listEl = document.getElementById('meal-picker-options-list');
+      const catEl = document.getElementById('meal-picker-categories');
+      const clearBtn = document.getElementById('meal-picker-clear-btn');
       if (!listEl) return;
+
+      if (clearBtn) {
+        clearBtn.classList.toggle('hidden', !state.mealPickerQuery);
+        clearBtn.classList.toggle('flex', Boolean(state.mealPickerQuery));
+      }
+
+      const categories = ['All', ...new Set(state.recipes.map(r => (r.category || 'Dinner').trim()).filter(Boolean))];
+      if (catEl) {
+        catEl.innerHTML = categories.map(cat => {
+          const active = (state.mealPickerCategory || 'All') === cat;
+          return `
+            <button
+              onclick="setMealPickerCategory('${escapeHtml(cat)}')"
+              class="min-h-[34px] px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition border ${
+                active
+                  ? 'bg-pastel text-zinc-950 border-pastel font-semibold'
+                  : 'bg-bg border-border text-zinc-300 hover:border-pastel-border'
+              }"
+            >
+              ${escapeHtml(cat)}
+            </button>
+          `;
+        }).join('');
+      }
+
       const currentRecipeId = state.schedule[day];
-      const q = state.mealPickerQuery.trim().toLowerCase();
+      const q = (state.mealPickerQuery || '').trim().toLowerCase();
+      const selectedCat = state.mealPickerCategory || 'All';
       const maxLimit = Number(state.maxCookTime) || 0;
 
       const filtered = state.recipes.filter(r => {
         const timeOk = !maxLimit || getRecipeCookTime(r) <= maxLimit;
         if (!timeOk) return false;
+        if (selectedCat !== 'All' && (r.category || 'Dinner').trim() !== selectedCat) return false;
         if (!q) return true;
         return r.name.toLowerCase().includes(q) ||
           (r.category || '').toLowerCase().includes(q) ||
@@ -1174,7 +1268,7 @@
       });
 
       if (filtered.length === 0) {
-        listEl.innerHTML = `<div class="px-3 py-3 text-xs text-zinc-500 text-center">No matching meals found.</div>`;
+        listEl.innerHTML = `<div class="px-4 py-8 text-xs text-zinc-400 text-center">No matching meals found. Try clearing your filter.</div>`;
         return;
       }
 
@@ -1183,12 +1277,23 @@
         return `
           <button
             onclick="setDayRecipe('${day}', '${escapeHtml(r.id)}')"
-            class="w-full min-h-[42px] text-left px-3 py-2 rounded-lg text-xs transition flex items-center justify-between gap-2 ${
-              isSelected ? 'bg-pastel-dim text-pastel-light font-semibold' : 'text-zinc-200 hover:bg-zinc-800/80'
+            class="w-full min-h-[54px] text-left p-3 rounded-xl border transition flex items-center justify-between gap-3 ${
+              isSelected
+                ? 'bg-pastel-dim border-pastel text-pastel-light'
+                : 'bg-bg border-border text-zinc-100 hover:border-pastel-border active:bg-zinc-800/90'
             }"
           >
-            <span class="truncate">${escapeHtml(r.name)}</span>
-            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-bg border border-border text-zinc-400 shrink-0">⏱️ ${getRecipeCookTime(r)}m • ${escapeHtml(r.category || 'Dinner')}</span>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-1.5">
+                ${isSelected ? `<span class="text-xs font-bold text-pastel-light">✓</span>` : ''}
+                <span class="text-xs sm:text-sm font-semibold truncate">${escapeHtml(r.name)}</span>
+              </div>
+              <p class="text-[11px] text-zinc-400 truncate mt-0.5">${(r.ingredients || []).slice(0, 4).map(escapeHtml).join(' • ')}</p>
+            </div>
+            <div class="flex flex-col items-end gap-1 shrink-0">
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded-md bg-card border border-border text-pastel-light">⏱️ ${getRecipeCookTime(r)}m</span>
+              <span class="text-[10px] font-mono text-zinc-400">${escapeHtml(r.category || 'Dinner')}</span>
+            </div>
           </button>
         `;
       }).join('');
@@ -1605,7 +1710,6 @@
 
         const isExpanded = !!state.expandedPlannerDays[day];
         const isLocked = !!(state.lockedDays && state.lockedDays[day]);
-        const isPickerOpen = state.openMealPickerDay === day;
         const instructions = recipe.instructions || [];
         const cookTime = getRecipeCookTime(recipe);
 
@@ -1648,28 +1752,11 @@
                 <div class="relative">
                   <button
                     onclick="toggleDayMealPicker('${day}', event)"
-                    class="group min-h-[38px] text-left inline-flex items-center gap-2 max-w-full py-1 rounded hover:text-pastel-light transition"
+                    class="group min-h-[42px] w-full sm:w-auto text-left inline-flex items-center justify-between sm:justify-start gap-2.5 px-3 py-2 rounded-xl bg-bg/80 border border-border hover:border-pastel-border transition"
                   >
                     <span class="text-sm sm:text-base font-semibold text-zinc-100 group-hover:text-pastel-light truncate">${escapeHtml(recipe.name)}</span>
-                    <span class="text-xs font-mono px-2 py-1 rounded-lg bg-bg border border-border text-zinc-400 group-hover:text-pastel-light shrink-0">🔍 ▾</span>
+                    <span class="text-xs font-mono px-2.5 py-1 rounded-lg bg-card border border-border text-pastel-light shrink-0">Change ▾</span>
                   </button>
-
-                  ${isPickerOpen ? `
-                    <div onclick="event.stopPropagation()" class="fixed inset-x-3 top-24 sm:absolute sm:inset-x-auto sm:left-0 sm:top-full sm:mt-1.5 sm:w-80 bg-card border border-pastel-border rounded-xl shadow-2xl p-3 z-50 space-y-2.5">
-                      <div class="flex items-center justify-between gap-2">
-                        <span class="text-xs font-mono text-pastel-light font-semibold">Choose Meal for ${day}</span>
-                        <button onclick="closeDayMealPicker()" class="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-bg border border-border text-xs text-zinc-400 hover:text-zinc-200">✕</button>
-                      </div>
-                      <input
-                        id="meal-picker-input-${day}"
-                        type="text"
-                        placeholder="Type to search meals..."
-                        oninput="filterMealPickerOptions('${day}', this.value)"
-                        class="w-full min-h-[40px] px-3 py-2 rounded-lg bg-bg border border-border text-xs text-zinc-100 focus:outline-none focus:border-pastel"
-                      >
-                      <div id="meal-picker-list-${day}" class="max-h-60 overflow-y-auto space-y-1 pr-1"></div>
-                    </div>
-                  ` : ''}
                 </div>
               </div>
 
@@ -1696,7 +1783,7 @@
       }).join('');
 
       if (state.openMealPickerDay) {
-        filterMealPickerOptions(state.openMealPickerDay, state.mealPickerQuery);
+        renderMealPickerModalContent();
       }
     }
 
@@ -2390,7 +2477,6 @@
     }
 
     window.addEventListener('DOMContentLoaded', init);
-    document.addEventListener('click', () => { if (state.openMealPickerDay !== null) closeDayMealPicker(); });
   </script>
 </body>
 </html>
