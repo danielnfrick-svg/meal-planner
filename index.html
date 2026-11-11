@@ -234,6 +234,15 @@
       box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.28);
     }
 
+    select option {
+      background-color: #101614;
+      color: #f4f4f5;
+    }
+    html.light-theme select option {
+      background-color: #ffffff;
+      color: #0f1f19;
+    }
+
     @media (max-width: 640px) {
       input[type="text"],
       input[type="number"],
@@ -493,10 +502,13 @@
             </div>
           </div>
 
-          <!-- 1. Ingredients -->
+          <!-- 1. Structured Ingredients (Qty + Unit Dropdown + Item Name) -->
           <div class="bg-bg/50 border border-border rounded-xl p-3 space-y-2">
             <div class="flex items-center justify-between gap-2">
-              <label class="text-xs font-semibold text-pastel-light">🛒 Ingredients *</label>
+              <div>
+                <label class="text-xs font-semibold text-pastel-light">🛒 Ingredients *</label>
+                <span class="hidden sm:inline-block text-[10px] font-mono text-zinc-400 ml-1.5">Qty • Unit • Ingredient Name</span>
+              </div>
               <button type="button" onclick="addFormListRow('new-ingredients-list', 'ingredient')" class="min-h-[30px] px-2.5 py-0.5 rounded-full bg-pastel-dim border border-pastel-border text-pastel-light text-xs font-medium transition">+ Add</button>
             </div>
             <div id="new-ingredients-list" class="space-y-1.5"></div>
@@ -667,7 +679,7 @@
 
     const ALL_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     const STORAGE_KEY = 'minimal_meal_planner_v4';
-    const AUTO_SYNC_INTERVAL_MS = 5000; // 5 seconds
+    const AUTO_SYNC_INTERVAL_MS = 30000; // 30 seconds
     let autoSyncTimer = null;
     let isSyncInProgress = false;
     let lastLocalChangeTime = 0;
@@ -679,6 +691,91 @@
       'honey', 'sugar', 'brown sugar', 'flour', 'cornstarch',
       'rice', 'jasmine rice', 'brown rice', 'parmesan cheese'
     ];
+
+    // Standard Dropdown Options for the Structured Ingredient Builder
+    const INGREDIENT_UNIT_GROUPS = [
+      {
+        label: 'Count / Whole',
+        options: [
+          { value: '', label: 'whole / count' },
+          { value: 'large', label: 'large' },
+          { value: 'medium', label: 'medium' },
+          { value: 'small', label: 'small' },
+          { value: 'piece', label: 'piece(s)' },
+          { value: 'slice', label: 'slice(s)' },
+          { value: 'fillet', label: 'fillet(s)' }
+        ]
+      },
+      {
+        label: 'Weight',
+        options: [
+          { value: 'lb', label: 'lb / lbs' },
+          { value: 'oz', label: 'oz' },
+          { value: 'g', label: 'g' },
+          { value: 'kg', label: 'kg' }
+        ]
+      },
+      {
+        label: 'Volume',
+        options: [
+          { value: 'cup', label: 'cup(s)' },
+          { value: 'tbsp', label: 'tbsp' },
+          { value: 'tsp', label: 'tsp' },
+          { value: 'pint', label: 'pint(s)' },
+          { value: 'quart', label: 'quart(s)' },
+          { value: 'ml', label: 'ml' }
+        ]
+      },
+      {
+        label: 'Produce & Pack',
+        options: [
+          { value: 'clove', label: 'clove(s)' },
+          { value: 'can', label: 'can(s)' },
+          { value: 'jar', label: 'jar(s)' },
+          { value: 'pkg', label: 'pkg' },
+          { value: 'bunch', label: 'bunch(es)' },
+          { value: 'crown', label: 'crown(s)' },
+          { value: 'head', label: 'head(s)' },
+          { value: 'stalk', label: 'stalk(s)' },
+          { value: 'sprig', label: 'sprig(s)' }
+        ]
+      },
+      {
+        label: 'Seasoning',
+        options: [
+          { value: 'pinch', label: 'pinch' },
+          { value: 'dash', label: 'dash' }
+        ]
+      }
+    ];
+
+    const UNIT_ALIASES = {
+      'lb': 'lb', 'lbs': 'lb', 'pound': 'lb', 'pounds': 'lb',
+      'oz': 'oz', 'ounce': 'oz', 'ounces': 'oz',
+      'g': 'g', 'gram': 'g', 'grams': 'g',
+      'kg': 'kg', 'kilogram': 'kg', 'kilograms': 'kg',
+      'cup': 'cup', 'cups': 'cup', 'c': 'cup',
+      'tbsp': 'tbsp', 'tbs': 'tbsp', 'tb': 'tbsp', 'tablespoon': 'tbsp', 'tablespoons': 'tbsp',
+      'tsp': 'tsp', 'ts': 'tsp', 'teaspoon': 'tsp', 'teaspoons': 'tsp',
+      'ml': 'ml', 'milliliter': 'ml', 'milliliters': 'ml',
+      'pint': 'pint', 'pints': 'pint', 'pt': 'pint',
+      'quart': 'quart', 'quarts': 'quart', 'qt': 'quart',
+      'clove': 'clove', 'cloves': 'clove',
+      'can': 'can', 'cans': 'can',
+      'jar': 'jar', 'jars': 'jar',
+      'pkg': 'pkg', 'package': 'pkg', 'packages': 'pkg', 'packet': 'pkg', 'packets': 'pkg',
+      'crown': 'crown', 'crowns': 'crown',
+      'bunch': 'bunch', 'bunches': 'bunch',
+      'head': 'head', 'heads': 'head',
+      'stalk': 'stalk', 'stalks': 'stalk',
+      'sprig': 'sprig', 'sprigs': 'sprig',
+      'fillet': 'fillet', 'fillets': 'fillet',
+      'slice': 'slice', 'slices': 'slice',
+      'piece': 'piece', 'pieces': 'piece',
+      'pinch': 'pinch', 'pinches': 'pinch',
+      'dash': 'dash', 'dashes': 'dash',
+      'large': 'large', 'medium': 'medium', 'small': 'small'
+    };
 
     const DEFAULT_RECIPES = [
       {
@@ -734,7 +831,7 @@
         baseServings: 4,
         cookTime: 25,
         category: 'Seafood',
-        ingredients: ['4 salmon fillets', '1 bunch asparagus', '1 cup quinoa', '2 lemons', '2 tbsp butter'],
+        ingredients: ['4 fillets salmon', '1 bunch asparagus', '1 cup quinoa', '2 lemons', '2 tbsp butter'],
         prep: ['Snap woody ends off asparagus', 'Slice lemons into thin rounds', 'Rinse quinoa'],
         instructions: [
           'Preheat oven to 400°F (200°C). Simmer rinsed quinoa in 2 cups water for 15 minutes.',
@@ -863,6 +960,421 @@
       updatedAt: 0
     };
 
+    // ============================================================================
+    // SMART MEASUREMENT PARSING, FRACTION FORMATTING & UNIT COMBINING ENGINE
+    // ============================================================================
+
+    function replaceUnicodeFractions(str) {
+      return String(str || '')
+        .replace(/¼/g, ' 1/4 ')
+        .replace(/½/g, ' 1/2 ')
+        .replace(/¾/g, ' 3/4 ')
+        .replace(/⅓/g, ' 1/3 ')
+        .replace(/⅔/g, ' 2/3 ')
+        .replace(/⅛/g, ' 1/8 ')
+        .replace(/⅜/g, ' 3/8 ')
+        .replace(/⅝/g, ' 5/8 ')
+        .replace(/⅞/g, ' 7/8 ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    /**
+     * Parses a quantity string like "1.5", "1/2", "1 1/2", "2-3", or corrupted "5.5 1/2" into a float.
+     */
+    function parseQuantityValue(rawQtyStr) {
+      const s = replaceUnicodeFractions(rawQtyStr);
+      if (!s) return null;
+
+      // 1. Corrupted decimal followed by fraction (e.g. "5.5 1/2" or "0.5 1/2")
+      const decFracMatch = s.match(/^(\d+\.\d+)\s+(\d+)\/(\d+)$/);
+      if (decFracMatch) {
+        return parseFloat(decFracMatch[1]);
+      }
+
+      // 2. Mixed fraction (e.g. "1 1/2")
+      const mixedMatch = s.match(/^(\d+)\s+(\d+)\/(\d+)$/);
+      if (mixedMatch) {
+        const den = parseInt(mixedMatch[3], 10);
+        return parseInt(mixedMatch[1], 10) + (den ? parseInt(mixedMatch[2], 10) / den : 0);
+      }
+
+      // 3. Simple fraction (e.g. "1/2" or "3/4")
+      const fracMatch = s.match(/^(\d+)\/(\d+)$/);
+      if (fracMatch) {
+        const den = parseInt(fracMatch[2], 10);
+        return den ? parseInt(fracMatch[1], 10) / den : 1;
+      }
+
+      // 4. Range (e.g. "1-2" or "1 to 2")
+      const rangeMatch = s.match(/^(\d+(?:\.\d+)?)\s*(?:\-|–|to)\s*(\d+(?:\.\d+)?)$/i);
+      if (rangeMatch) {
+        return parseFloat(rangeMatch[2]);
+      }
+
+      // 5. Plain decimal or integer
+      const numMatch = s.match(/^(\d+(?:\.\d+)?)$/);
+      if (numMatch) {
+        return parseFloat(numMatch[1]);
+      }
+
+      return null;
+    }
+
+    /**
+     * Formats any positive float into clean kitchen fractions (e.g. 0.5 -> "1/2", 1.5 -> "1 1/2", 5.5 -> "5 1/2").
+     */
+    function formatQuantity(num) {
+      if (!Number.isFinite(num) || num <= 0) return '';
+      if (num < 0.08) return '1/8';
+
+      let whole = Math.floor(num + 1e-6);
+      const rem = num - whole;
+
+      const fractions = [
+        { val: 0, str: '' },
+        { val: 0.125, str: '1/8' },
+        { val: 0.25, str: '1/4' },
+        { val: 1 / 3, str: '1/3' },
+        { val: 0.5, str: '1/2' },
+        { val: 2 / 3, str: '2/3' },
+        { val: 0.75, str: '3/4' },
+        { val: 1, str: '' }
+      ];
+
+      let best = fractions[0];
+      let minDiff = Math.abs(rem - best.val);
+      for (let i = 1; i < fractions.length; i++) {
+        const diff = Math.abs(rem - fractions[i].val);
+        if (diff < minDiff) {
+          minDiff = diff;
+          best = fractions[i];
+        }
+      }
+
+      if (best.val === 1) {
+        whole += 1;
+      }
+
+      if (whole > 0 && best.str) {
+        return `${whole} ${best.str}`;
+      }
+      if (whole > 0) {
+        return String(whole);
+      }
+      return best.str || '1/4';
+    }
+
+    function pluralizeUnit(unit, qty) {
+      if (!unit) return '';
+      if (qty <= 1.02) return unit;
+      const plurals = {
+        'lb': 'lbs',
+        'oz': 'oz',
+        'g': 'g',
+        'kg': 'kg',
+        'cup': 'cups',
+        'tbsp': 'tbsp',
+        'tsp': 'tsp',
+        'ml': 'ml',
+        'clove': 'cloves',
+        'can': 'cans',
+        'jar': 'jars',
+        'pkg': 'pkgs',
+        'crown': 'crowns',
+        'bunch': 'bunches',
+        'head': 'heads',
+        'stalk': 'stalks',
+        'sprig': 'sprigs',
+        'pint': 'pints',
+        'quart': 'quarts',
+        'fillet': 'fillets',
+        'slice': 'slices',
+        'piece': 'pieces',
+        'pinch': 'pinches',
+        'dash': 'dashes',
+        'large': 'large',
+        'medium': 'medium',
+        'small': 'small'
+      };
+      return plurals[unit] || unit;
+    }
+
+    /**
+     * Splits any raw ingredient string into structured { qty, hasExplicitQty, unit, name }
+     * Automatically repairs corrupted strings like "5.5 1/2 cup sun-dried tomatoes".
+     */
+    function parseIngredientParts(rawStr) {
+      let s = replaceUnicodeFractions(rawStr)
+        .replace(/^[\u2022\-\*\▪\◦\+]\s*/, '')
+        .trim();
+
+      if (!s) {
+        return { qty: 1, hasExplicitQty: false, unit: '', name: '' };
+      }
+
+      let qty = null;
+      let hasExplicitQty = false;
+
+      // 1. Check for corrupted decimal + fraction at start (e.g., "5.5 1/2 cup..." or "0.5 1/2 cup...")
+      const corruptedMatch = s.match(/^(\d+\.\d+)\s+(\d+)\/(\d+)\b\s*(.*)$/);
+      if (corruptedMatch) {
+        const decVal = parseFloat(corruptedMatch[1]);
+        const fracVal = parseInt(corruptedMatch[2], 10) / (parseInt(corruptedMatch[3], 10) || 1);
+        // If someone had "1/2 cup" and it got "5.5" prepended, or if it's a duplicate ".5 1/2"
+        if (Math.abs((decVal % 1) - fracVal) < 0.06) {
+          qty = decVal;
+        } else {
+          qty = fracVal;
+        }
+        hasExplicitQty = true;
+        s = corruptedMatch[4].trim();
+      }
+
+      // 2. Mixed fraction at start (e.g. "1 1/2 cups...")
+      if (!hasExplicitQty) {
+        const mixedMatch = s.match(/^(\d+)\s+(\d+)\/(\d+)\b\s*(.*)$/);
+        if (mixedMatch) {
+          const den = parseInt(mixedMatch[3], 10) || 1;
+          qty = parseInt(mixedMatch[1], 10) + (parseInt(mixedMatch[2], 10) / den);
+          hasExplicitQty = true;
+          s = mixedMatch[4].trim();
+        }
+      }
+
+      // 3. Simple fraction at start (e.g. "1/2 cup...")
+      if (!hasExplicitQty) {
+        const fracMatch = s.match(/^(\d+)\/(\d+)\b\s*(.*)$/);
+        if (fracMatch) {
+          const den = parseInt(fracMatch[2], 10) || 1;
+          qty = parseInt(fracMatch[1], 10) / den;
+          hasExplicitQty = true;
+          s = fracMatch[3].trim();
+        }
+      }
+
+      // 4. Range at start (e.g. "1-2 lbs...")
+      if (!hasExplicitQty) {
+        const rangeMatch = s.match(/^(\d+(?:\.\d+)?)\s*(?:\-|–|to)\s*(\d+(?:\.\d+)?)\b\s*(.*)$/i);
+        if (rangeMatch) {
+          qty = parseFloat(rangeMatch[2]);
+          hasExplicitQty = true;
+          s = rangeMatch[3].trim();
+        }
+      }
+
+      // 5. Decimal or integer at start (e.g. "1.5 lbs..." or "2 avocados")
+      if (!hasExplicitQty) {
+        const numMatch = s.match(/^(\d+(?:\.\d+)?)\b\s*(.*)$/);
+        if (numMatch) {
+          qty = parseFloat(numMatch[1]);
+          hasExplicitQty = true;
+          s = numMatch[2].trim();
+        }
+      }
+
+      // Strip any accidental extra fraction/number still lingering at the start of remaining text
+      while (/^(?:\d+\/\d+|\d+\.\d+)\b\s*/.test(s)) {
+        s = s.replace(/^(?:\d+\/\d+|\d+\.\d+)\b\s*/, '').trim();
+      }
+
+      // 6. Extract canonical unit if first word matches UNIT_ALIASES
+      let unit = '';
+      const wordMatch = s.match(/^([a-zA-Z]+)\.?\s+(.*)$/);
+      if (wordMatch) {
+        const candidateUnit = wordMatch[1].toLowerCase();
+        if (UNIT_ALIASES[candidateUnit]) {
+          unit = UNIT_ALIASES[candidateUnit];
+          s = wordMatch[2].replace(/^of\s+/i, '').trim();
+        }
+      }
+
+      // Also strip duplicate leading unit if one was left over in the name (e.g. "cup cup sun-dried tomatoes")
+      const secondWordMatch = s.match(/^([a-zA-Z]+)\.?\s+(.*)$/);
+      if (secondWordMatch && UNIT_ALIASES[secondWordMatch[1].toLowerCase()] === unit && unit !== '') {
+        s = secondWordMatch[2].replace(/^of\s+/i, '').trim();
+      }
+
+      return {
+        qty: hasExplicitQty && qty > 0 ? qty : 1,
+        hasExplicitQty,
+        unit,
+        name: s || String(rawStr || '').trim()
+      };
+    }
+
+    /**
+     * Builds a clean canonical storage string for a recipe ingredient (e.g. "0.5 cup sun-dried tomatoes")
+     */
+    function buildCanonicalIngredientString(qtyVal, unitVal, nameVal) {
+      const cleanName = String(nameVal || '').replace(/,/g, ' -').replace(/\s+/g, ' ').trim();
+      if (!cleanName) return '';
+
+      // If the user typed a full ingredient into the name box and left qty/unit blank, parse it
+      const parsedFromName = parseIngredientParts(cleanName);
+      let finalQty = parseQuantityValue(qtyVal);
+      let finalUnit = UNIT_ALIASES[String(unitVal || '').toLowerCase().trim()] || '';
+      let finalName = cleanName;
+
+      if (finalQty === null && parsedFromName.hasExplicitQty) {
+        finalQty = parsedFromName.qty;
+        if (!finalUnit && parsedFromName.unit) finalUnit = parsedFromName.unit;
+        finalName = parsedFromName.name;
+      } else {
+        // Strip any accidental duplicate leading qty/unit from the name box
+        if (parsedFromName.hasExplicitQty && parsedFromName.name) {
+          finalName = parsedFromName.name;
+          if (!finalUnit && parsedFromName.unit) finalUnit = parsedFromName.unit;
+        }
+      }
+
+      if (finalQty === null || !Number.isFinite(finalQty) || finalQty <= 0) {
+        return finalName;
+      }
+
+      const roundedQty = Math.round(finalQty * 100) / 100;
+      const unitStr = pluralizeUnit(finalUnit, roundedQty);
+      return unitStr ? `${roundedQty} ${unitStr} ${finalName}` : `${roundedQty} ${finalName}`;
+    }
+
+    /**
+     * Formats a canonical ingredient string with human-friendly fractions (e.g., "1/2 cup sun-dried tomatoes")
+     */
+    function formatIngredientForDisplay(rawStr) {
+      const parts = parseIngredientParts(rawStr);
+      if (!parts.hasExplicitQty) return parts.name;
+      const qStr = formatQuantity(parts.qty);
+      const uStr = pluralizeUnit(parts.unit, parts.qty);
+      return uStr ? `${qStr} ${uStr} ${parts.name}` : `${qStr} ${parts.name}`;
+    }
+
+    /**
+     * Normalizes an ingredient name for grocery list deduplication & combining
+     */
+    function normalizeIngredientKeyName(name) {
+      let n = String(name || '').toLowerCase().trim()
+        .replace(/\s+/g, ' ')
+        .replace(/^fresh\s+/, '');
+      // Normalize common singular/plural variations so they combine cleanly
+      const singularMap = {
+        'avocados': 'avocado',
+        'lemons': 'lemon',
+        'limes': 'lime',
+        'carrots': 'carrot',
+        'bell peppers': 'bell pepper',
+        'sweet potatoes': 'sweet potato',
+        'red onions': 'red onion',
+        'yellow onions': 'yellow onion',
+        'onions': 'onion',
+        'zucchinis': 'zucchini',
+        'cucumbers': 'cucumber',
+        'english cucumbers': 'english cucumber',
+        'chicken breasts': 'chicken breast',
+        'salmon fillets': 'salmon'
+      };
+      return singularMap[n] || n;
+    }
+
+    /**
+     * Determines unit family so compatible measurements (e.g. tbsp + cup, or oz + lb) combine automatically
+     */
+    function getUnitFamilyInfo(unit) {
+      if (unit === 'tsp') return { family: 'volume', toBase: 1 };
+      if (unit === 'tbsp') return { family: 'volume', toBase: 3 };
+      if (unit === 'cup') return { family: 'volume', toBase: 48 };
+      if (unit === 'pint') return { family: 'volume', toBase: 96 };
+      if (unit === 'quart') return { family: 'volume', toBase: 192 };
+
+      if (unit === 'oz') return { family: 'weight', toBase: 1 };
+      if (unit === 'lb') return { family: 'weight', toBase: 16 };
+
+      if (unit === 'g') return { family: 'metric_weight', toBase: 1 };
+      if (unit === 'kg') return { family: 'metric_weight', toBase: 1000 };
+
+      return { family: `exact_${unit || 'count'}`, toBase: 1 };
+    }
+
+    /**
+     * Converts a combined base quantity back into the cleanest, simplified kitchen unit
+     */
+    function simplifyCombinedMeasurement(baseQty, family, preferredUnits) {
+      if (family === 'volume') {
+        // baseQty is in tsp (1 tbsp = 3 tsp, 1 cup = 48 tsp)
+        const hasCup = preferredUnits.includes('cup');
+        const hasPint = preferredUnits.includes('pint');
+        if (hasPint && !hasCup && baseQty >= 96 && Math.abs((baseQty / 96) - Math.round(baseQty / 96)) < 0.08) {
+          return { qty: baseQty / 96, unit: 'pint' };
+        }
+        // Convert to cups if >= 12 tsp (1/4 cup) and either originally in cups or a clean cup fraction
+        if (baseQty >= 12) {
+          const cups = baseQty / 48;
+          const cleanCupFractions = [0.25, 1 / 3, 0.5, 2 / 3, 0.75, 1];
+          const rem = cups - Math.floor(cups + 1e-6);
+          const isCleanCup = cleanCupFractions.some(f => Math.abs(rem - f) < 0.05) || rem < 0.05;
+          if (hasCup || baseQty >= 48 || isCleanCup) {
+            return { qty: cups, unit: 'cup' };
+          }
+        }
+        // Convert to tbsp if >= 3 tsp (1 tbsp)
+        if (baseQty >= 3) {
+          return { qty: baseQty / 3, unit: 'tbsp' };
+        }
+        return { qty: baseQty, unit: 'tsp' };
+      }
+
+      if (family === 'weight') {
+        // baseQty is in oz (1 lb = 16 oz)
+        const hasLb = preferredUnits.includes('lb');
+        const hasOz = preferredUnits.includes('oz');
+        if (baseQty >= 16) {
+          return { qty: baseQty / 16, unit: 'lb' };
+        }
+        if (hasLb && !hasOz && baseQty >= 4) {
+          return { qty: baseQty / 16, unit: 'lb' };
+        }
+        return { qty: baseQty, unit: 'oz' };
+      }
+
+      if (family === 'metric_weight') {
+        if (baseQty >= 1000) return { qty: baseQty / 1000, unit: 'kg' };
+        return { qty: baseQty, unit: 'g' };
+      }
+
+      return { qty: baseQty, unit: preferredUnits[0] || '' };
+    }
+
+    function parseScaledIngredient(rawStr, factor) {
+      const parts = parseIngredientParts(rawStr);
+      const scaledQty = parts.hasExplicitQty ? (parts.qty * factor) : 1;
+      const normName = normalizeIngredientKeyName(parts.name);
+      const famInfo = getUnitFamilyInfo(parts.unit);
+
+      return {
+        qty: scaledQty,
+        baseQty: scaledQty * famInfo.toBase,
+        hasExplicitQty: parts.hasExplicitQty,
+        unit: parts.unit,
+        family: famInfo.family,
+        name: parts.name,
+        key: `${normName}__${famInfo.family}`
+      };
+    }
+
+    /**
+     * Repairs any corrupted ingredient strings in state.recipes automatically
+     */
+    function sanitizeAllRecipesIngredients() {
+      if (!Array.isArray(state.recipes)) return;
+      state.recipes.forEach(r => {
+        if (Array.isArray(r.ingredients)) {
+          r.ingredients = r.ingredients.map(ing => {
+            const parts = parseIngredientParts(ing);
+            return buildCanonicalIngredientString(parts.hasExplicitQty ? parts.qty : '', parts.unit, parts.name);
+          }).filter(Boolean);
+        }
+      });
+    }
+
     function isAppsScriptEnv() {
       return typeof google !== 'undefined' && google.script && google.script.run;
     }
@@ -916,7 +1428,7 @@
       const pill = document.getElementById('gemini-status-pill');
       if (!pill) return;
       const hasLocalKey = Boolean(getStoredGeminiKey());
-      pill.textContent = hasLocalKey ? '✨ Gemini Key Active' : '✨ Gemini AI Ready';
+      pill.textContent = hasLocalKey ? '✨ Gemini Key Active' : '✨ AI';
     }
 
     function openGeminiKeyModal() {
@@ -1022,7 +1534,6 @@
         if (document.hidden) return;
         if (!hasBackendConnection()) return;
         if (isUserActivelyTyping()) return;
-        // Wait if user made a local change in the last 4 seconds so background push finishes first
         if (Date.now() - lastLocalChangeTime < 4000) return;
         pullRecipesFromSheet(true);
       }, AUTO_SYNC_INTERVAL_MS);
@@ -1041,11 +1552,11 @@
       if (state.lightTheme) {
         htmlEl.classList.add('light-theme');
         if (btn) btn.textContent = '☀️';
-        if (metaTheme) metaTheme.setAttribute('content', '#ffffff');
+        if (metaTheme) metaTheme.setAttribute('content', '#f3f6f4');
       } else {
         htmlEl.classList.remove('light-theme');
         if (btn) btn.textContent = '🌙';
-        if (metaTheme) metaTheme.setAttribute('content', '#09090b');
+        if (metaTheme) metaTheme.setAttribute('content', '#070a09');
       }
     }
 
@@ -1075,6 +1586,7 @@
           if (!state.expandedHistoryIds) state.expandedHistoryIds = {};
           if (!state.lockedDays) state.lockedDays = {};
           if (!state.expandedPlannerDays) state.expandedPlannerDays = {};
+          sanitizeAllRecipesIngredients();
           ensureValidSchedule();
         } else {
           loadFreshDefaults();
@@ -1104,9 +1616,84 @@
       root.querySelectorAll('textarea.auto-expand').forEach(el => autoResizeTextarea(el));
     }
 
+    function buildUnitSelectOptionsHtml(selectedUnit) {
+      const canonical = UNIT_ALIASES[String(selectedUnit || '').toLowerCase()] || '';
+      return INGREDIENT_UNIT_GROUPS.map(group => `
+        <optgroup label="${escapeHtml(group.label)}">
+          ${group.options.map(opt => `
+            <option value="${escapeHtml(opt.value)}" ${opt.value === canonical ? 'selected' : ''}>${escapeHtml(opt.label)}</option>
+          `).join('')}
+        </optgroup>
+      `).join('');
+    }
+
+    /**
+     * If a user pastes a full ingredient string like "1 1/2 cups sun-dried tomatoes" into the Ingredient Name input,
+     * automatically split it into the Qty box, Unit dropdown, and Name box!
+     */
+    function handleSmartIngredientNameInput(nameInputEl) {
+      const val = nameInputEl.value;
+      if (!val || val.length < 4) return;
+      const row = nameInputEl.closest('.dynamic-row');
+      if (!row) return;
+      const qtyInput = row.querySelector('.ing-qty-input');
+      const unitSelect = row.querySelector('.ing-unit-select');
+      if (!qtyInput || !unitSelect) return;
+
+      // Only auto-split if Qty is currently empty and the pasted text clearly starts with a number + unit
+      if (!qtyInput.value.trim() && /^(?:\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:\.\d+)?|[¼½¾⅓⅔⅛⅜⅝⅞])\s+[a-zA-Z]+\s+.+/.test(val.trim())) {
+        const parsed = parseIngredientParts(val);
+        if (parsed.hasExplicitQty && parsed.name) {
+          qtyInput.value = formatQuantity(parsed.qty);
+          if (parsed.unit) unitSelect.value = parsed.unit;
+          nameInputEl.value = parsed.name;
+        }
+      }
+    }
+
     function createDynamicRowHtml(type, value = '', index = 0) {
+      if (type === 'ingredient') {
+        const parsed = value ? parseIngredientParts(value) : { qty: '', hasExplicitQty: false, unit: '', name: '' };
+        const qtyDisplay = parsed.hasExplicitQty ? formatQuantity(parsed.qty) : '';
+        const unitVal = parsed.unit || '';
+        const nameDisplay = parsed.name || '';
+
+        return `
+          <div class="dynamic-row flex items-center gap-1.5">
+            <input
+              type="text"
+              inputmode="decimal"
+              placeholder="Qty"
+              value="${escapeHtml(qtyDisplay)}"
+              onkeydown="handleDynamicRowKeydown(event, this, 'ingredient')"
+              class="ing-qty-input w-14 sm:w-16 min-h-[38px] px-2 py-1.5 rounded-lg bg-card border border-border text-xs font-mono text-center text-pastel-light focus:outline-none focus:border-pastel shrink-0"
+              title="Quantity (e.g. 1, 1/2, 1.5)"
+            >
+            <select
+              class="ing-unit-select w-28 sm:w-32 min-h-[38px] px-2 py-1.5 rounded-lg bg-card border border-border text-xs font-mono text-zinc-200 focus:outline-none focus:border-pastel shrink-0 cursor-pointer"
+              title="Measurement Unit"
+            >
+              ${buildUnitSelectOptionsHtml(unitVal)}
+            </select>
+            <input
+              type="text"
+              placeholder="Ingredient (e.g. sun-dried tomatoes)"
+              value="${escapeHtml(nameDisplay)}"
+              oninput="handleSmartIngredientNameInput(this)"
+              onkeydown="handleDynamicRowKeydown(event, this, 'ingredient')"
+              class="ing-name-input flex-1 min-w-0 min-h-[38px] px-3 py-1.5 rounded-lg bg-card border border-border text-xs text-zinc-100 focus:outline-none focus:border-pastel"
+            >
+            <button
+              type="button"
+              onclick="removeDynamicFormRow(this)"
+              class="min-h-[38px] min-w-[34px] flex items-center justify-center rounded-lg bg-card border border-border text-zinc-400 hover:text-red-400 text-xs transition shrink-0"
+              title="Remove ingredient"
+            >✕</button>
+          </div>
+        `;
+      }
+
       const placeholderMap = {
-        ingredient: 'e.g., 1.5 lbs chicken breast',
         prep: 'e.g., Cube chicken into 1-inch pieces',
         step: `Step ${index + 1} directions...`
       };
@@ -1159,10 +1746,16 @@
       const rowEl = wrapper.firstElementChild;
       container.appendChild(rowEl);
       renumberStepBadges(container);
-      const textarea = rowEl.querySelector('textarea');
-      if (textarea) {
-        autoResizeTextarea(textarea);
-        if (focusNew) textarea.focus();
+
+      if (type === 'ingredient') {
+        const qtyInput = rowEl.querySelector('.ing-qty-input');
+        if (qtyInput && focusNew) qtyInput.focus();
+      } else {
+        const textarea = rowEl.querySelector('textarea');
+        if (textarea) {
+          autoResizeTextarea(textarea);
+          if (focusNew) textarea.focus();
+        }
       }
     }
 
@@ -1172,6 +1765,15 @@
       const container = row.parentElement;
       if (!container) return;
       if (container.querySelectorAll('.dynamic-row').length <= 1) {
+        const qtyInput = row.querySelector('.ing-qty-input');
+        const unitSelect = row.querySelector('.ing-unit-select');
+        const nameInput = row.querySelector('.ing-name-input');
+        if (qtyInput || nameInput) {
+          if (qtyInput) qtyInput.value = '';
+          if (unitSelect) unitSelect.value = '';
+          if (nameInput) nameInput.value = '';
+          return;
+        }
         const ta = row.querySelector('textarea');
         if (ta) { ta.value = ''; autoResizeTextarea(ta); }
         return;
@@ -1180,11 +1782,10 @@
       renumberStepBadges(container);
     }
 
-    function handleDynamicRowKeydown(event, textareaEl, type) {
-      // Pressing Enter (without Shift) on an Ingredient or Prep row adds a new row right below
+    function handleDynamicRowKeydown(event, inputEl, type) {
       if (event.key === 'Enter' && !event.shiftKey) {
         event.preventDefault();
-        const container = textareaEl.closest('[id]');
+        const container = inputEl.closest('[id]');
         if (container) {
           addFormListRow(container.id, type, '', true);
         }
@@ -1195,8 +1796,22 @@
       const container = document.getElementById(containerId);
       if (!container) return [];
       const values = [];
+
+      // Check if this is a structured ingredient row container
+      const ingRows = container.querySelectorAll('.dynamic-row');
+      if (ingRows.length > 0 && ingRows[0].querySelector('.ing-name-input')) {
+        ingRows.forEach(row => {
+          const qtyVal = (row.querySelector('.ing-qty-input')?.value || '').trim();
+          const unitVal = (row.querySelector('.ing-unit-select')?.value || '').trim();
+          const nameVal = (row.querySelector('.ing-name-input')?.value || '').trim();
+          if (!nameVal && !qtyVal) return;
+          const canonical = buildCanonicalIngredientString(qtyVal, unitVal, nameVal);
+          if (canonical) values.push(canonical);
+        });
+        return values;
+      }
+
       container.querySelectorAll('textarea').forEach(ta => {
-        // Split if user pasted multiple lines into a single box
         const lines = ta.value.split('\n').map(s => s.trim()).filter(Boolean);
         lines.forEach(line => {
           let cleaned = line
@@ -1436,6 +2051,7 @@
             isSyncInProgress = false;
             if (Array.isArray(sheetRecipes) && sheetRecipes.length > 0) {
               state.recipes = sheetRecipes;
+              sanitizeAllRecipesIngredients();
               ensureValidSchedule();
               saveState(false);
               if (!isUserActivelyTyping()) renderAll();
@@ -1488,6 +2104,7 @@
 
         if (Array.isArray(json.recipes) && json.recipes.length > 0) {
           state.recipes = json.recipes;
+          sanitizeAllRecipesIngredients();
         }
         if (Array.isArray(json.history)) {
           state.planHistory = json.history;
@@ -1523,10 +2140,10 @@
         if (!view || !btn) return;
         if (t === tab) {
           view.classList.remove('hidden');
-          btn.className = 'min-h-[40px] sm:min-h-0 px-1.5 sm:px-3.5 py-2 sm:py-1.5 rounded-lg text-xs font-medium transition border bg-pastel-dim text-pastel-light border-pastel-border flex items-center justify-center gap-1';
+          btn.className = 'min-h-[36px] sm:min-h-0 px-1.5 sm:px-4 py-1.5 rounded-full text-xs font-medium transition border bg-pastel-dim text-pastel-light border-pastel-border flex items-center justify-center gap-1';
         } else {
           view.classList.add('hidden');
-          btn.className = 'min-h-[40px] sm:min-h-0 px-1.5 sm:px-3.5 py-2 sm:py-1.5 rounded-lg text-xs font-medium transition border border-transparent text-zinc-400 hover:text-zinc-200 flex items-center justify-center gap-1';
+          btn.className = 'min-h-[36px] sm:min-h-0 px-1.5 sm:px-4 py-1.5 rounded-full text-xs font-medium transition border border-transparent text-zinc-400 hover:text-zinc-200 flex items-center justify-center gap-1';
         }
       });
       const mainScroll = document.getElementById('main-scroll-container');
@@ -1708,7 +2325,7 @@
                 ${isSelected ? `<span class="text-xs font-bold text-pastel-light">✓</span>` : ''}
                 <span class="text-xs sm:text-sm font-semibold truncate">${escapeHtml(r.name)}</span>
               </div>
-              <p class="text-[11px] text-zinc-400 truncate mt-0.5">${(r.ingredients || []).slice(0, 4).map(escapeHtml).join(' • ')}</p>
+              <p class="text-[11px] text-zinc-400 truncate mt-0.5">${(r.ingredients || []).slice(0, 4).map(i => escapeHtml(formatIngredientForDisplay(i))).join(' • ')}</p>
             </div>
             <div class="flex flex-col items-end gap-1 shrink-0">
               <span class="text-[10px] font-mono px-2 py-0.5 rounded-md bg-card border border-border text-pastel-light">⏱️ ${getRecipeCookTime(r)}m</span>
@@ -1849,63 +2466,6 @@
       showToast('Shuffled week');
     }
 
-    const UNIT_ALIASES = {
-      'lb': 'lb', 'lbs': 'lb', 'pound': 'lb', 'pounds': 'lb',
-      'oz': 'oz', 'ounce': 'oz', 'ounces': 'oz',
-      'cup': 'cup', 'cups': 'cup',
-      'tbsp': 'tbsp', 'tablespoon': 'tbsp', 'tablespoons': 'tbsp',
-      'tsp': 'tsp', 'teaspoon': 'tsp', 'teaspoons': 'tsp',
-      'clove': 'clove', 'cloves': 'clove',
-      'can': 'can', 'cans': 'can',
-      'crown': 'crown', 'crowns': 'crown',
-      'bunch': 'bunch', 'bunches': 'bunch',
-      'pint': 'pint', 'pints': 'pint',
-      'fillet': 'fillet', 'fillets': 'fillet',
-      'large': 'large', 'medium': 'medium', 'small': 'small'
-    };
-
-    function formatQuantity(num) {
-      const rounded = Math.round(num * 100) / 100;
-      if (Math.abs(rounded - Math.round(rounded)) < 0.04) return String(Math.round(rounded));
-      if (Math.abs(rounded - 0.25) < 0.04) return '1/4';
-      if (Math.abs(rounded - 0.33) < 0.04) return '1/3';
-      if (Math.abs(rounded - 0.5) < 0.04) return '1/2';
-      if (Math.abs(rounded - 0.67) < 0.04) return '2/3';
-      if (Math.abs(rounded - 0.75) < 0.04) return '3/4';
-      return String(Number(rounded.toFixed(1)));
-    }
-
-    function pluralizeUnit(unit, qty) {
-      if (!unit || qty <= 1) return unit;
-      const plurals = {
-        'lb': 'lbs', 'oz': 'oz', 'cup': 'cups', 'tbsp': 'tbsp', 'tsp': 'tsp',
-        'clove': 'cloves', 'can': 'cans', 'crown': 'crowns', 'bunch': 'bunches',
-        'pint': 'pints', 'fillet': 'fillets', 'large': 'large', 'medium': 'medium', 'small': 'small'
-      };
-      return plurals[unit] || unit;
-    }
-
-    function parseScaledIngredient(rawStr, factor) {
-      const trimmed = String(rawStr || '').trim();
-      const match = trimmed.match(/^(\d+(?:\.\d+)?)\s+([a-zA-Z]+)\s+(.+)$/);
-      if (match) {
-        const rawQty = parseFloat(match[1]) * factor;
-        const firstWord = match[2].toLowerCase();
-        if (UNIT_ALIASES[firstWord]) {
-          const canonicalUnit = UNIT_ALIASES[firstWord];
-          const itemName = match[3].trim();
-          return { qty: rawQty, unit: canonicalUnit, name: itemName, key: `${itemName.toLowerCase()}__${canonicalUnit}` };
-        }
-      }
-      const simpleMatch = trimmed.match(/^(\d+(?:\.\d+)?)\s+(.+)$/);
-      if (simpleMatch) {
-        const rawQty = parseFloat(simpleMatch[1]) * factor;
-        const itemName = simpleMatch[2].trim();
-        return { qty: rawQty, unit: '', name: itemName, key: `${itemName.toLowerCase()}__count` };
-      }
-      return { qty: 1 * factor, unit: '', name: trimmed, key: `${trimmed.toLowerCase()}__raw` };
-    }
-
     function isPantryStaple(itemName) {
       const cleanName = String(itemName || '').toLowerCase().trim();
       if (!cleanName || !Array.isArray(state.pantryStaples)) return false;
@@ -1955,12 +2515,22 @@
           const parsed = parseScaledIngredient(ing, factor);
           if (!map.has(parsed.key)) {
             map.set(parsed.key, {
-              key: parsed.key, qty: parsed.qty, unit: parsed.unit, name: parsed.name,
-              days: [dayTag], meals: [meta.recipe.name]
+              key: parsed.key,
+              baseQty: parsed.baseQty,
+              hasExplicitQty: parsed.hasExplicitQty,
+              family: parsed.family,
+              preferredUnits: [parsed.unit],
+              name: parsed.name,
+              days: [dayTag],
+              meals: [meta.recipe.name]
             });
           } else {
             const existing = map.get(parsed.key);
-            existing.qty += parsed.qty;
+            existing.baseQty += parsed.baseQty;
+            if (parsed.hasExplicitQty) existing.hasExplicitQty = true;
+            if (!existing.preferredUnits.includes(parsed.unit)) {
+              existing.preferredUnits.push(parsed.unit);
+            }
             if (!existing.days.includes(dayTag)) existing.days.push(dayTag);
             if (!existing.meals.includes(meta.recipe.name)) existing.meals.push(meta.recipe.name);
           }
@@ -1975,9 +2545,15 @@
           allItems.push(item);
           return;
         }
-        const qtyStr = formatQuantity(item.qty);
-        const unitStr = pluralizeUnit(item.unit, item.qty);
-        const displayText = unitStr ? `${qtyStr} ${unitStr} ${item.name}` : `${qtyStr} ${item.name}`;
+
+        let displayText = item.name;
+        if (item.hasExplicitQty) {
+          const simplified = simplifyCombinedMeasurement(item.baseQty, item.family, item.preferredUnits);
+          const qtyStr = formatQuantity(simplified.qty);
+          const unitStr = pluralizeUnit(simplified.unit, simplified.qty);
+          displayText = unitStr ? `${qtyStr} ${unitStr} ${item.name}` : `${qtyStr} ${item.name}`;
+        }
+
         const stapleMatch = isPantryStaple(item.name);
 
         const entry = {
@@ -2502,10 +3078,13 @@
                 </div>
               </div>
 
-              <!-- Edit Ingredients Top-to-Bottom List -->
+              <!-- Edit Ingredients Structured List (Qty + Unit Dropdown + Item Name) -->
               <div class="bg-bg/50 border border-border rounded-xl p-3 space-y-2">
                 <div class="flex items-center justify-between">
-                  <span class="text-xs font-semibold text-pastel-light">🛒 Ingredients</span>
+                  <div>
+                    <span class="text-xs font-semibold text-pastel-light">🛒 Ingredients</span>
+                    <span class="hidden sm:inline-block text-[10px] font-mono text-zinc-400 ml-1.5">Qty • Unit • Ingredient Name</span>
+                  </div>
                   <button type="button" onclick="addFormListRow('edit-ingredients-list-${rid}', 'ingredient')" class="min-h-[32px] px-2.5 py-1 rounded-lg bg-pastel-dim border border-pastel-border text-pastel-light text-xs font-medium">+ Add Ingredient</button>
                 </div>
                 <div id="edit-ingredients-list-${rid}" class="space-y-2">
@@ -2554,7 +3133,7 @@
                 <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-pastel-dim text-pastel-light">⏱️ ${cookTime}m</span>
                 <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">${escapeHtml(recipe.category || 'Dinner')}</span>
               </div>
-              <p class="text-[11px] text-zinc-400 truncate">${(recipe.ingredients || []).map(escapeHtml).join(' • ')}</p>
+              <p class="text-[11px] text-zinc-400 truncate">${(recipe.ingredients || []).map(i => escapeHtml(formatIngredientForDisplay(i))).join(' • ')}</p>
             </div>
             <div class="flex items-center gap-1.5 shrink-0">
               <button onclick="startEditRecipe('${escapeHtml(recipe.id)}')" class="min-h-[36px] text-xs text-zinc-300 hover:text-pastel-light px-3 py-1.5 rounded-lg bg-bg border border-border transition">✎ Edit</button>
@@ -2650,7 +3229,6 @@
       const stepsLower = stepsText.toLowerCase();
       const ingList = (ingredients || []).map(i => i.trim()).filter(Boolean);
 
-      // 1. Scan cooking steps for explicit prep verbs (dice, slice, cube, whisk, rinse, marinate, etc.)
       (instructions || []).forEach(step => {
         const clauses = step.split(/[.;]|,\s+(?:then|and)\s+/i);
         clauses.forEach(clause => {
@@ -2661,12 +3239,10 @@
         });
       });
 
-      // 2. Analyze each ingredient + how it is used in the cooking instructions
       ingList.forEach(rawIng => {
         const parsed = parseScaledIngredient(rawIng, 1);
         const item = (parsed.name || rawIng).toLowerCase();
 
-        // Proteins
         if (/chicken breast|chicken thigh|chicken/.test(item)) {
           if (/cube|bite-size|chunk/.test(stepsLower) || /cube/.test(item)) addTask('Cube chicken into 1-inch bite-sized pieces');
           else if (/cutlet|strip|slice/.test(stepsLower)) addTask('Slice chicken into cutlets or strips');
@@ -2684,10 +3260,7 @@
         } else if (/salmon|fish|cod|tilapia|shrimp/.test(item)) {
           if (/shrimp/.test(item)) addTask('Peel, devein, and pat dry shrimp');
           else addTask('Portion fish fillets and pat dry');
-        }
-
-        // Produce & Vegetables
-        else if (/broccoli/.test(item)) addTask('Wash and chop broccoli into bite-sized florets');
+        } else if (/broccoli/.test(item)) addTask('Wash and chop broccoli into bite-sized florets');
         else if (/bell pepper|pepper/.test(item) && !/black pepper|chili|flake/.test(item)) {
           if (/dice/.test(stepsLower)) addTask('Core and dice bell peppers');
           else addTask('Core and slice bell peppers into strips');
@@ -2716,18 +3289,14 @@
         else if (/lemon|lime/.test(item) && !/juice/.test(item)) {
           if (/round|slice/.test(stepsLower)) addTask(`Slice ${parsed.name} into thin rounds`);
           else addTask(`Wash ${parsed.name} for fresh juice/wedges`);
-        }
-
-        // Canned Goods, Beans & Grains
-        else if (/black bean|chickpea|garbanzo|kidney bean|cannellini|pinto bean/.test(item)) {
+        } else if (/black bean|chickpea|garbanzo|kidney bean|cannellini|pinto bean/.test(item)) {
           addTask(`Rinse and drain ${parsed.name}`);
         } else if (/quinoa|brown rice|jasmine rice|white rice|farro/.test(item)) {
           if (/brown rice|quinoa|farro/.test(item)) addTask(`Rinse ${parsed.name} (or batch-cook ahead for the week)`);
-          else addTask(`Measure out ${rawIng} for quick weeknight cooking`);
+          else addTask(`Measure out ${formatIngredientForDisplay(rawIng)} for quick weeknight cooking`);
         }
       });
 
-      // 3. Detect if multiple sauce/dressing ingredients can be pre-whisked in a jar
       const sauceMatches = ingList.filter(i => /(soy sauce|honey|broth|cornstarch|teriyaki|sesame oil|vinegar|olive oil|mustard|maple|sriracha)/i.test(i));
       if (sauceMatches.length >= 2 && (/whisk|simmer|glaze|sauce|slurry|dressing|pour|toss/i.test(stepsLower))) {
         const names = sauceMatches.slice(0, 3).map(s => parseScaledIngredient(s, 1).name).join(', ');
@@ -2769,7 +3338,6 @@ Recipe: ${name}
 Ingredients: ${ingredients.join(', ')}
 Cooking Steps: ${instructions.join(' | ')}`;
 
-        // 1. Try direct Gemini API call (works in Canvas or when user adds a Gemini key)
         const directResult = await callGeminiDirectJson(prompt, {
           type: "ARRAY",
           items: { type: "STRING" }
@@ -2778,7 +3346,6 @@ Cooking Steps: ${instructions.join(' | ')}`;
           aiTasks = directResult;
         }
 
-        // 2. Try Apps Script backend proxy if direct key wasn't set
         if (!aiTasks && hasBackendConnection()) {
           try {
             const backendRes = await callBackendPost('geminiPrep', { name, ingredients, instructions });
@@ -2802,8 +3369,8 @@ Cooking Steps: ${instructions.join(' | ')}`;
       if (!file) return;
 
       const btn = document.getElementById('btn-import-pdf');
-      const origLabel = btn ? btn.textContent : '📄 Import PDF';
-      if (btn) btn.textContent = '⏳ Reading PDF...';
+      const origLabel = btn ? btn.textContent : '📄 PDF';
+      if (btn) btn.textContent = '⏳ Reading...';
 
       try {
         if (typeof pdfjsLib === 'undefined') {
@@ -2839,7 +3406,6 @@ Cooking Steps: ${instructions.join(' | ')}`;
           lineBuckets.sort((a, b) => b.y - a.y);
           lineBuckets.forEach(b => {
             b.parts.sort((a, c) => a.x - c.x);
-            // Detect side-by-side columns on the same Y coordinate (large horizontal gap > 45pt)
             const segments = [];
             let currentSeg = [];
             let lastRightEdge = null;
@@ -2864,11 +3430,10 @@ Cooking Steps: ${instructions.join(' | ')}`;
         let parsed = null;
         const rawPdfText = allLines.map(l => typeof l === 'string' ? l : l.text).join('\n').slice(0, 12000);
 
-        // Try Gemini AI structured recipe + Sunday prep extraction first
         const pdfPrompt = `Extract this recipe PDF text into structured JSON.
 Strict Classification Rules:
 - "name": The dish title ONLY (never a section header, website URL, or author name).
-- "ingredients": ONLY physical food ingredients with their measurements. Convert any fractions (like 1/2, ¼, 1 1/2) into decimals (0.5, 0.25, 1.5) at the start of each ingredient string (e.g., "1.5 lbs chicken breast", "2 crowns broccoli"). Never put cooking directions in ingredients, and do not use commas inside an individual ingredient string.
+- "ingredients": ONLY physical food ingredients with their measurements. Format each string as "<decimal_qty> <standard_unit> <ingredient_name>" (e.g., "1.5 lbs chicken breast", "0.5 cup sun-dried tomatoes", "2 crowns broccoli"). Never put cooking directions in ingredients, and do not use commas inside an individual ingredient string.
 - "instructions": Complete step-by-step cooking directions in chronological order. Merge wrapped lines that belong to the same sentence.
 - "prep": 3 to 4 practical Sunday advance meal-prep tasks based on the ingredients and cooking steps.
 - "category": One of Poultry, Beef, Seafood, Pasta, Vegetarian, or Dinner.
@@ -2889,7 +3454,7 @@ ${rawPdfText}`;
           propertyOrdering: ["name", "category", "cookTime", "baseServings", "ingredients", "prep", "instructions"]
         };
 
-        if (btn) btn.textContent = '✨ Parsing PDF...';
+        if (btn) btn.textContent = '✨ Parsing...';
         const directPdfAi = await callGeminiDirectJson(pdfPrompt, geminiSchema);
         if (directPdfAi && directPdfAi.name && Array.isArray(directPdfAi.ingredients) && directPdfAi.ingredients.length > 0) {
           parsed = directPdfAi;
@@ -2926,26 +3491,8 @@ ${rawPdfText}`;
     }
 
     function normalizeFractionString(str) {
-      let s = String(str || '')
-        .replace(/¼/g, ' 1/4 ').replace(/½/g, ' 1/2 ').replace(/¾/g, ' 3/4 ')
-        .replace(/⅓/g, ' 1/3 ').replace(/⅔/g, ' 2/3 ')
-        .replace(/⅛/g, ' 0.13 ').replace(/⅜/g, ' 0.38 ').replace(/⅝/g, ' 0.63 ').replace(/⅞/g, ' 0.88 ')
-        .replace(/\s+/g, ' ')
-        .trim();
-
-      // Convert mixed numbers like "1 1/2" or "2 1/4" at the start of the ingredient
-      s = s.replace(/^(\d+)\s+(\d+)\/(\d+)\b/, (_, whole, num, den) => {
-        const val = parseInt(whole, 10) + (parseInt(num, 10) / parseInt(den, 10));
-        return String(Math.round(val * 100) / 100);
-      });
-      // Convert simple fractions like "1/2" or "3/4" at the start of the ingredient
-      s = s.replace(/^(\d+)\/(\d+)\b/, (_, num, den) => {
-        const val = parseInt(num, 10) / parseInt(den, 10);
-        return String(Math.round(val * 100) / 100);
-      });
-      // Convert range like "1-2 lbs" or "1 to 2 cups" to the upper/average number so scaling works
-      s = s.replace(/^(\d+(?:\.\d+)?)\s*(?:\-|–|to)\s*(\d+(?:\.\d+)?)\b/i, '$2');
-      return s.replace(/,/g, ' -').replace(/\s+/g, ' ').trim();
+      const parts = parseIngredientParts(str);
+      return buildCanonicalIngredientString(parts.hasExplicitQty ? parts.qty : '', parts.unit, parts.name);
     }
 
     function parseRecipeFromPdfLines(rawLineObjs, fallbackFilename) {
@@ -2964,7 +3511,6 @@ ${rawPdfText}`;
       let baseServings = 4;
       let cookTime = 30;
 
-      // 1. Extract Servings
       const servMatch = fullText.match(/(?:servings?|serves|yield|makes)\s*[:\-]?\s*(\d+)/i) ||
                         fullText.match(/\b(\d+)\s+(?:servings?|portions?)\b/i);
       if (servMatch) {
@@ -2972,7 +3518,6 @@ ${rawPdfText}`;
         if (s >= 1 && s <= 24) baseServings = s;
       }
 
-      // 2. Extract Cook / Total Time
       const hrMinMatch = fullText.match(/(?:total|cook|prep|active)?\s*time[^.\n]{0,20}?(\d+)\s*(?:hr|hour)s?\s*(?:(\d+)\s*(?:min|minute|m)s?)?/i);
       const minMatch = fullText.match(/(?:total\s*time|cook\s*time|active\s*time|prep\s*time|ready\s*in|time)\s*[:\-]?\s*(\d+)\s*(?:min|minute|m)\b/i) ||
                        fullText.match(/\b(\d+)\s*(?:mins?|minutes?)\b/i);
@@ -2983,7 +3528,6 @@ ${rawPdfText}`;
         if (m >= 5 && m <= 360) cookTime = m;
       }
 
-      // 3. Identify Title using largest font on Page 1 (excluding generic headers)
       const ingHeaderRx = /^(?:ingredients?|what you(?:'ll)? need|shopping list|for the [a-z\s]+)\s*:?$/i;
       const prepHeaderRx = /^(?:sunday prep|meal prep|advance prep|prep(?:aration)?(?:\s+tasks|\s+steps)?|before you cook)\s*:?$/i;
       const instHeaderRx = /^(?:instructions?|directions?|method|steps?|cooking\s+directions?|how to (?:make|prepare|cook)(?: it)?|preparation)\s*:?$/i;
@@ -3023,13 +3567,11 @@ ${rawPdfText}`;
         if (!raw) continue;
         if (name && raw === name) continue;
 
-        // Check section headers
         if (/^(?:ingredients?|what you(?:'ll)? need|shopping list)\s*:?$/i.test(raw)) { section = 'ingredients'; continue; }
         if (prepHeaderRx.test(raw)) { section = 'prep'; continue; }
         if (instHeaderRx.test(raw)) { section = 'instructions'; continue; }
         if (/^(?:notes?|nutrition(?:\s+facts|\s+information)?|chef(?:'s)?\s+notes?|tips?)\s*:?$/i.test(raw)) { section = 'notes'; continue; }
 
-        // Skip subheaders like "For the Sauce:"
         if (/^for the [a-z\s]+\s*:$/i.test(raw) && raw.length < 35) continue;
         if (noiseRx.test(raw) && raw.length < 60) continue;
 
@@ -3040,12 +3582,10 @@ ${rawPdfText}`;
         if (!cleanLine) continue;
 
         if (section === 'ingredients') {
-          // If the PDF switched to instructions without a header
           if ((isNumberedStep(raw) || cookVerbStartRx.test(cleanLine)) && raw.length > 60 && !qtyStartRx.test(raw)) {
             section = 'instructions';
             rawInstructions.push(cleanLine);
           } else if (!qtyStartRx.test(raw) && rawIngredients.length > 0 && /^[a-z\(]/.test(cleanLine) && cleanLine.length < 45) {
-            // Wrapped continuation of previous ingredient line (e.g., "boneless, skinless" or "(optional)")
             rawIngredients[rawIngredients.length - 1] += ' ' + cleanLine;
           } else {
             rawIngredients.push(cleanLine);
@@ -3053,7 +3593,6 @@ ${rawPdfText}`;
         } else if (section === 'prep') {
           rawPrep.push(cleanLine);
         } else if (section === 'instructions') {
-          // If a new numbered step or starts after a period, start a new step; otherwise merge wrapped PDF lines
           const startsNewStep = isNumberedStep(raw) || /^[\u2022\-\*\▪\◦]\s+/.test(raw);
           const prevStep = rawInstructions.length > 0 ? rawInstructions[rawInstructions.length - 1] : '';
           const prevEndedSentence = /[\.\!\?\"\']$/.test(prevStep);
@@ -3066,7 +3605,6 @@ ${rawPdfText}`;
             rawInstructions.push(cleanLine);
           }
         } else if (section !== 'notes') {
-          // Unlabeled section: classify intelligently
           if (isLikelyIngredientLine(raw)) {
             rawIngredients.push(cleanLine);
           } else if (isNumberedStep(raw) || (cookVerbStartRx.test(cleanLine) && cleanLine.length > 25) || cleanLine.length > 75) {
@@ -3265,7 +3803,7 @@ ${rawPdfText}`;
       }
 
       if (list.length === 0) {
-        container.innerHTML = `<div class="bg-card border border-border rounded-xl p-6 text-center text-xs text-zinc-400">No saved plans yet. Click <strong>✉ Email Plan</strong> or <strong>💾 Save Week</strong>.</div>`;
+        container.innerHTML = `<div class="bg-card border border-border rounded-xl p-6 text-center text-xs text-zinc-400">No saved plans yet. Click <strong>✉ Email</strong> or <strong>💾 Save Week</strong>.</div>`;
         return;
       }
 
@@ -3327,7 +3865,7 @@ ${rawPdfText}`;
                     <ul class="space-y-1.5 max-h-60 overflow-y-auto pr-1 text-zinc-200">
                       ${groceries.map(g => `
                         <li class="flex items-start justify-between gap-2 border-b border-border/50 pb-1">
-                          <span>• ${escapeHtml(g.text)}</span>
+                          <span>• ${escapeHtml(formatIngredientForDisplay(g.text))}</span>
                           <span class="text-[10px] font-mono text-zinc-400 shrink-0">${escapeHtml(g.day || '')}</span>
                         </li>
                       `).join('')}
@@ -3372,13 +3910,13 @@ ${rawPdfText}`;
       renderHistory();
       if (!hasBackendConnection()) { showToast('Saved to history! (Connect Apps Script URL to email)'); return; }
       const btn = document.getElementById('btn-email-plan');
-      if (btn) btn.textContent = 'Sending...';
+      if (btn) btn.innerHTML = '<span>⏳</span>';
       try {
         const res = await callBackendPost('sendEmail', snapshot);
-        if (btn) btn.textContent = '✉ Email Plan';
+        if (btn) btn.innerHTML = '<span>✉</span><span class="hidden sm:inline">Email</span>';
         showToast('Emailed to ' + (res && res.email ? res.email : 'your email'));
       } catch (err) {
-        if (btn) btn.textContent = '✉ Email Plan';
+        if (btn) btn.innerHTML = '<span>✉</span><span class="hidden sm:inline">Email</span>';
         showToast('Email error: ' + err.message);
       }
     }
@@ -3397,7 +3935,7 @@ ${rawPdfText}`;
 
       document.getElementById('modal-recipe-title').textContent = recipe.name;
       document.getElementById('modal-recipe-badges').innerHTML = `<span class="text-[10px] font-mono px-2 py-0.5 rounded bg-pastel-dim text-pastel-light">⏱️ ${getRecipeCookTime(recipe)}m • ${escapeHtml(recipe.category || 'Dinner')} • ${recipe.baseServings || 4} Servings</span>`;
-      document.getElementById('modal-recipe-ingredients').innerHTML = (recipe.ingredients || []).map(i => `<span class="px-2 py-0.5 rounded bg-bg border border-border text-xs text-zinc-200">${escapeHtml(i)}</span>`).join('');
+      document.getElementById('modal-recipe-ingredients').innerHTML = (recipe.ingredients || []).map(i => `<span class="px-2 py-0.5 rounded bg-bg border border-border text-xs text-zinc-200">${escapeHtml(formatIngredientForDisplay(i))}</span>`).join('');
       document.getElementById('modal-recipe-prep').innerHTML = (recipe.prep || []).map(p => `<li>• ${escapeHtml(p)}</li>`).join('') || '<li>None</li>';
       document.getElementById('modal-recipe-steps').innerHTML = (recipe.instructions || []).map((s, i) => `<li class="p-2 rounded bg-bg border border-border"><strong>Step ${i+1}.</strong> ${escapeHtml(s)}</li>`).join('') || '<li>None</li>';
       
