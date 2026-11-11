@@ -129,6 +129,11 @@
       text-decoration: line-through;
       color: #52525b;
     }
+
+    textarea.auto-expand {
+      overflow-y: hidden;
+      resize: none;
+    }
   </style>
 </head>
 <body class="bg-bg text-zinc-100 font-sans antialiased h-full w-full overflow-hidden flex flex-col selection:bg-pastel/20 selection:text-pastel-light">
@@ -344,36 +349,85 @@
 
     <!-- 4. RECIPES TAB -->
     <section id="view-recipes" class="hidden space-y-3">
-      <div class="bg-card border border-border rounded-xl p-3.5 sm:p-4 space-y-3">
-        <div class="flex flex-wrap items-center justify-between gap-2">
+      <div class="bg-card border border-border rounded-xl p-3.5 sm:p-4 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-border/70">
           <div>
             <div class="flex items-center gap-2">
               <h2 class="text-sm font-semibold text-zinc-100">Add New Recipe</h2>
               <span id="gemini-status-pill" class="text-[10px] font-mono px-2 py-0.5 rounded bg-pastel-dim text-pastel-light border border-pastel-border">✨ Gemini Ready</span>
             </div>
-            <p class="text-[11px] text-zinc-400">Automatically syncs to your Google Sheet.</p>
+            <p class="text-[11px] text-zinc-400">Add items one-by-one or import a PDF — syncs to your Google Sheet.</p>
           </div>
           <div class="flex flex-wrap items-center gap-2">
             <input id="input-recipe-pdf" type="file" accept="application/pdf,.pdf" class="hidden" onchange="handleRecipePdfImport(event)">
-            <button id="btn-import-pdf" onclick="document.getElementById('input-recipe-pdf').click()" class="min-h-[36px] px-2.5 py-1 rounded-lg bg-pastel-dim border border-pastel-border text-pastel-light hover:bg-pastel/20 font-medium text-xs transition">📄 Import PDF</button>
-            <button onclick="openGeminiKeyModal()" class="min-h-[36px] px-2.5 py-1 rounded-lg bg-bg border border-border text-zinc-300 hover:text-pastel-light text-xs transition" title="Configure your free Gemini API key for AI Prep & PDF parsing">🔑 Gemini AI</button>
-            <button onclick="resetToDefaultRecipes()" class="min-h-[36px] px-2.5 py-1 rounded-lg bg-bg border border-border text-zinc-400 hover:text-pastel-light text-xs transition">↺ Restore 10 Defaults</button>
+            <button id="btn-import-pdf" onclick="document.getElementById('input-recipe-pdf').click()" class="min-h-[38px] px-3 py-1.5 rounded-lg bg-pastel-dim border border-pastel-border text-pastel-light hover:bg-pastel/20 font-semibold text-xs transition">📄 Import PDF</button>
+            <button onclick="openGeminiKeyModal()" class="min-h-[38px] px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-300 hover:text-pastel-light text-xs transition" title="Configure your free Gemini API key for AI Prep & PDF parsing">🔑 Gemini AI</button>
+            <button onclick="resetToDefaultRecipes()" class="min-h-[38px] px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-400 hover:text-pastel-light text-xs transition">↺ Defaults</button>
           </div>
         </div>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-          <input id="input-recipe-name" type="text" placeholder="Recipe Name *" class="col-span-2 sm:col-span-1 min-h-[40px] px-3 py-2 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel">
-          <input id="input-recipe-category" type="text" placeholder="Category (Poultry, Beef...)" class="min-h-[40px] px-3 py-2 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel">
-          <input id="input-recipe-time" type="number" placeholder="Cook Time (mins)" value="30" class="min-h-[40px] px-3 py-2 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel">
-          <input id="input-recipe-servings" type="number" placeholder="Base Servings" value="4" class="min-h-[40px] px-3 py-2 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel">
+
+        <!-- Basic Info Row -->
+        <div class="grid grid-cols-2 sm:grid-cols-6 gap-2.5 text-xs">
+          <div class="col-span-2 sm:col-span-3 space-y-1">
+            <label class="text-[11px] font-mono text-zinc-400">Recipe Name *</label>
+            <input id="input-recipe-name" type="text" placeholder="e.g., Honey Garlic Chicken" class="w-full min-h-[40px] px-3 py-2 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel">
+          </div>
+          <div class="col-span-2 sm:col-span-1 space-y-1">
+            <label class="text-[11px] font-mono text-zinc-400">Category</label>
+            <input id="input-recipe-category" type="text" placeholder="Poultry, Beef..." value="Dinner" class="w-full min-h-[40px] px-3 py-2 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel">
+          </div>
+          <div class="col-span-1 space-y-1">
+            <label class="text-[11px] font-mono text-zinc-400">⏱️ Mins</label>
+            <input id="input-recipe-time" type="number" placeholder="30" value="30" class="w-full min-h-[40px] px-3 py-2 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel">
+          </div>
+          <div class="col-span-1 space-y-1">
+            <label class="text-[11px] font-mono text-zinc-400">🍽️ Servings</label>
+            <input id="input-recipe-servings" type="number" placeholder="4" value="4" class="w-full min-h-[40px] px-3 py-2 rounded-lg bg-bg border border-border text-zinc-100 focus:outline-none focus:border-pastel">
+          </div>
         </div>
-        <input id="input-recipe-ingredients" type="text" placeholder="Ingredients (comma-separated, e.g., 1.5 lbs chicken breast, 2 crowns broccoli) *" class="w-full min-h-[40px] px-3 py-2 rounded-lg bg-bg border border-border text-xs text-zinc-100 focus:outline-none focus:border-pastel">
-        <div class="flex items-center gap-2">
-          <input id="input-recipe-prep" type="text" placeholder="Sunday Prep tasks (comma-separated, e.g., Cube chicken, Chop broccoli)" class="flex-1 min-h-[40px] px-3 py-2 rounded-lg bg-bg border border-border text-xs text-zinc-100 focus:outline-none focus:border-pastel">
-          <button id="btn-ai-prep-new" onclick="generateSmartPrepForForm('new')" class="min-h-[40px] px-3 py-2 rounded-lg bg-pastel-dim border border-pastel-border text-pastel-light hover:bg-pastel/20 font-medium text-xs transition shrink-0" title="Analyze ingredients & steps to generate Sunday prep tasks">✨ Auto-Prep</button>
+
+        <!-- 1. Top-to-Bottom Ingredients List Builder -->
+        <div class="bg-bg/50 border border-border rounded-xl p-3 space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <label class="text-xs font-semibold text-pastel-light">🛒 Ingredients *</label>
+              <p class="text-[11px] text-zinc-400">Start with quantity & unit (e.g., <span class="font-mono text-zinc-300">1.5 lbs chicken breast</span>). Press Enter to add next.</p>
+            </div>
+            <button type="button" onclick="addFormListRow('new-ingredients-list', 'ingredient')" class="min-h-[34px] px-2.5 py-1 rounded-lg bg-pastel-dim border border-pastel-border text-pastel-light hover:bg-pastel/20 text-xs font-medium transition shrink-0">+ Add Ingredient</button>
+          </div>
+          <div id="new-ingredients-list" class="space-y-2"></div>
         </div>
-        <textarea id="input-recipe-instructions" rows="3" placeholder="Cooking steps (one step per line)..." class="w-full px-3 py-2 rounded-lg bg-bg border border-border text-xs text-zinc-100 focus:outline-none focus:border-pastel"></textarea>
-        <div class="flex justify-end">
-          <button onclick="addNewRecipe()" class="min-h-[40px] px-4 py-2 rounded-lg bg-pastel hover:bg-pastel-light text-zinc-950 font-semibold text-xs transition">+ Add Recipe</button>
+
+        <!-- 2. Top-to-Bottom Sunday Prep List Builder -->
+        <div class="bg-bg/50 border border-border rounded-xl p-3 space-y-2.5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <label class="text-xs font-semibold text-pastel-light">🔪 Sunday Prep Tasks</label>
+              <p class="text-[11px] text-zinc-400">Advance chopping, marinating, or sauce mixing for Sunday.</p>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button type="button" id="btn-ai-prep-new" onclick="generateSmartPrepForForm('new')" class="min-h-[34px] px-2.5 py-1 rounded-lg bg-pastel-dim border border-pastel-border text-pastel-light hover:bg-pastel/20 font-semibold text-xs transition shrink-0" title="Analyze ingredients & steps to generate Sunday prep tasks">✨ Auto-Prep</button>
+              <button type="button" onclick="addFormListRow('new-prep-list', 'prep')" class="min-h-[34px] px-2.5 py-1 rounded-lg bg-card border border-border text-zinc-300 hover:text-pastel-light text-xs font-medium transition shrink-0">+ Add Task</button>
+            </div>
+          </div>
+          <div id="new-prep-list" class="space-y-2"></div>
+        </div>
+
+        <!-- 3. Top-to-Bottom Cooking Steps Builder (Auto-Expanding Textboxes) -->
+        <div class="bg-bg/50 border border-border rounded-xl p-3 space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <label class="text-xs font-semibold text-pastel-light">📖 Cooking Directions</label>
+              <p class="text-[11px] text-zinc-400">Boxes automatically expand to show all text as you type or import.</p>
+            </div>
+            <button type="button" onclick="addFormListRow('new-instructions-list', 'step')" class="min-h-[34px] px-2.5 py-1 rounded-lg bg-card border border-border text-zinc-300 hover:text-pastel-light text-xs font-medium transition shrink-0">+ Add Step</button>
+          </div>
+          <div id="new-instructions-list" class="space-y-2"></div>
+        </div>
+
+        <div class="flex items-center justify-between pt-1">
+          <button type="button" onclick="clearNewRecipeForm()" class="min-h-[40px] px-3 py-2 rounded-lg bg-bg border border-border text-zinc-400 hover:text-zinc-200 text-xs transition">Clear Form</button>
+          <button type="button" onclick="addNewRecipe()" class="min-h-[42px] px-5 py-2 rounded-lg bg-pastel hover:bg-pastel-light text-zinc-950 font-semibold text-xs transition shadow-sm">+ Save Recipe to Sheet</button>
         </div>
       </div>
 
@@ -936,6 +990,7 @@
       }
       applyThemeMode();
       updateGeminiStatusPill();
+      initNewRecipeFormRows();
       renderAll();
       if (hasBackendConnection()) {
         pullRecipesFromSheet(true);
@@ -943,6 +998,147 @@
         updateSyncStatus('Local mode (add /exec URL to sync)', false);
       }
       startAutoSyncTimer();
+    }
+
+    function autoResizeTextarea(el) {
+      if (!el) return;
+      el.style.height = 'auto';
+      el.style.height = Math.max(38, el.scrollHeight) + 'px';
+    }
+
+    function autoResizeAllTextareas(root = document) {
+      root.querySelectorAll('textarea.auto-expand').forEach(el => autoResizeTextarea(el));
+    }
+
+    function createDynamicRowHtml(type, value = '', index = 0) {
+      const placeholderMap = {
+        ingredient: 'e.g., 1.5 lbs chicken breast',
+        prep: 'e.g., Cube chicken into 1-inch pieces',
+        step: `Step ${index + 1} directions...`
+      };
+      const badge = type === 'step'
+        ? `<span class="step-num-badge text-[10px] font-mono px-2 py-1 rounded bg-card border border-border text-pastel-light shrink-0 mt-1">${index + 1}</span>`
+        : `<span class="text-xs font-mono text-zinc-500 shrink-0 mt-2">•</span>`;
+
+      return `
+        <div class="dynamic-row flex items-start gap-2">
+          ${badge}
+          <textarea
+            rows="1"
+            oninput="autoResizeTextarea(this)"
+            onkeydown="handleDynamicRowKeydown(event, this, '${type}')"
+            placeholder="${placeholderMap[type] || ''}"
+            class="auto-expand flex-1 min-h-[38px] px-3 py-2 rounded-lg bg-card border border-border text-xs text-zinc-100 leading-relaxed focus:outline-none focus:border-pastel"
+          >${escapeHtml(value)}</textarea>
+          <button
+            type="button"
+            onclick="removeDynamicFormRow(this)"
+            class="min-h-[38px] min-w-[36px] flex items-center justify-center rounded-lg bg-card border border-border text-zinc-400 hover:text-red-400 text-xs transition shrink-0"
+            title="Remove row"
+          >✕</button>
+        </div>
+      `;
+    }
+
+    function renumberStepBadges(container) {
+      if (!container) return;
+      container.querySelectorAll('.step-num-badge').forEach((badge, idx) => {
+        badge.textContent = String(idx + 1);
+      });
+    }
+
+    function setFormListRows(containerId, type, items = []) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      const list = Array.isArray(items) && items.length > 0 ? items : [''];
+      container.innerHTML = list.map((val, idx) => createDynamicRowHtml(type, val, idx)).join('');
+      renumberStepBadges(container);
+      requestAnimationFrame(() => autoResizeAllTextareas(container));
+    }
+
+    function addFormListRow(containerId, type, initialValue = '', focusNew = true) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      const count = container.querySelectorAll('.dynamic-row').length;
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = createDynamicRowHtml(type, initialValue, count).trim();
+      const rowEl = wrapper.firstElementChild;
+      container.appendChild(rowEl);
+      renumberStepBadges(container);
+      const textarea = rowEl.querySelector('textarea');
+      if (textarea) {
+        autoResizeTextarea(textarea);
+        if (focusNew) textarea.focus();
+      }
+    }
+
+    function removeDynamicFormRow(btnEl) {
+      const row = btnEl.closest('.dynamic-row');
+      if (!row) return;
+      const container = row.parentElement;
+      if (!container) return;
+      if (container.querySelectorAll('.dynamic-row').length <= 1) {
+        const ta = row.querySelector('textarea');
+        if (ta) { ta.value = ''; autoResizeTextarea(ta); }
+        return;
+      }
+      row.remove();
+      renumberStepBadges(container);
+    }
+
+    function handleDynamicRowKeydown(event, textareaEl, type) {
+      // Pressing Enter (without Shift) on an Ingredient or Prep row adds a new row right below
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        const container = textareaEl.closest('[id]');
+        if (container) {
+          addFormListRow(container.id, type, '', true);
+        }
+      }
+    }
+
+    function getFormListValues(containerId, sanitizeCommas = false) {
+      const container = document.getElementById(containerId);
+      if (!container) return [];
+      const values = [];
+      container.querySelectorAll('textarea').forEach(ta => {
+        // Split if user pasted multiple lines into a single box
+        const lines = ta.value.split('\n').map(s => s.trim()).filter(Boolean);
+        lines.forEach(line => {
+          let cleaned = line
+            .replace(/^[\u2022\-\*\▪\◦\+]\s*/, '')
+            .replace(/^(?:step\s*)?\d+[\.\)]\s*/i, '')
+            .trim();
+          if (sanitizeCommas) {
+            cleaned = cleaned.replace(/,/g, ' -').replace(/\s+/g, ' ').trim();
+          }
+          if (cleaned) values.push(cleaned);
+        });
+      });
+      return values;
+    }
+
+    function initNewRecipeFormRows() {
+      const ingContainer = document.getElementById('new-ingredients-list');
+      if (ingContainer && ingContainer.children.length === 0) {
+        setFormListRows('new-ingredients-list', 'ingredient', ['', '']);
+        setFormListRows('new-prep-list', 'prep', ['']);
+        setFormListRows('new-instructions-list', 'step', ['']);
+      }
+    }
+
+    function clearNewRecipeForm() {
+      const nameEl = document.getElementById('input-recipe-name');
+      const catEl = document.getElementById('input-recipe-category');
+      const timeEl = document.getElementById('input-recipe-time');
+      const servEl = document.getElementById('input-recipe-servings');
+      if (nameEl) nameEl.value = '';
+      if (catEl) catEl.value = 'Dinner';
+      if (timeEl) timeEl.value = '30';
+      if (servEl) servEl.value = '4';
+      setFormListRows('new-ingredients-list', 'ingredient', ['', '']);
+      setFormListRows('new-prep-list', 'prep', ['']);
+      setFormListRows('new-instructions-list', 'step', ['']);
     }
 
     function loadFreshDefaults() {
@@ -2191,27 +2387,71 @@
         const cookTime = getRecipeCookTime(recipe);
 
         if (isEditing) {
-          const instructionsText = (recipe.instructions || []).join('\n');
+          const rid = escapeHtml(recipe.id);
           return `
-            <div id="recipe-card-${escapeHtml(recipe.id)}" class="bg-card border-2 border-pastel rounded-xl p-3 sm:p-4 space-y-2.5">
-              <div class="flex items-center justify-between">
+            <div id="recipe-card-${rid}" class="bg-card border-2 border-pastel rounded-xl p-3.5 sm:p-4 space-y-3.5">
+              <div class="flex items-center justify-between pb-2 border-b border-border/70">
                 <span class="text-xs font-mono uppercase tracking-wider text-pastel-light font-semibold">✎ Editing Recipe</span>
-                <button onclick="cancelEditRecipe()" class="min-h-[34px] px-2.5 text-xs text-zinc-400 hover:text-zinc-200">✕ Cancel</button>
+                <button onclick="cancelEditRecipe()" class="min-h-[34px] px-2.5 rounded-lg bg-bg border border-border text-xs text-zinc-400 hover:text-zinc-200">✕ Cancel</button>
               </div>
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                <input id="edit-name-${escapeHtml(recipe.id)}" type="text" value="${escapeHtml(recipe.name)}" class="col-span-2 sm:col-span-1 min-h-[40px] px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-100">
-                <input id="edit-category-${escapeHtml(recipe.id)}" type="text" value="${escapeHtml(recipe.category || 'Dinner')}" class="min-h-[40px] px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-100">
-                <input id="edit-time-${escapeHtml(recipe.id)}" type="number" value="${cookTime}" class="min-h-[40px] px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-100">
-                <input id="edit-servings-${escapeHtml(recipe.id)}" type="number" value="${recipe.baseServings || 4}" class="min-h-[40px] px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-100">
+              <div class="grid grid-cols-2 sm:grid-cols-6 gap-2.5 text-xs">
+                <div class="col-span-2 sm:col-span-3 space-y-1">
+                  <label class="text-[10px] font-mono text-zinc-400">Recipe Name</label>
+                  <input id="edit-name-${rid}" type="text" value="${escapeHtml(recipe.name)}" class="w-full min-h-[40px] px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-100">
+                </div>
+                <div class="col-span-2 sm:col-span-1 space-y-1">
+                  <label class="text-[10px] font-mono text-zinc-400">Category</label>
+                  <input id="edit-category-${rid}" type="text" value="${escapeHtml(recipe.category || 'Dinner')}" class="w-full min-h-[40px] px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-100">
+                </div>
+                <div class="col-span-1 space-y-1">
+                  <label class="text-[10px] font-mono text-zinc-400">⏱️ Mins</label>
+                  <input id="edit-time-${rid}" type="number" value="${cookTime}" class="w-full min-h-[40px] px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-100">
+                </div>
+                <div class="col-span-1 space-y-1">
+                  <label class="text-[10px] font-mono text-zinc-400">🍽️ Servings</label>
+                  <input id="edit-servings-${rid}" type="number" value="${recipe.baseServings || 4}" class="w-full min-h-[40px] px-2.5 py-1.5 rounded-lg bg-bg border border-border text-zinc-100">
+                </div>
               </div>
-              <input id="edit-ingredients-${escapeHtml(recipe.id)}" type="text" value="${escapeHtml((recipe.ingredients || []).join(', '))}" class="w-full min-h-[40px] px-2.5 py-1.5 rounded-lg bg-bg border border-border text-xs text-zinc-100">
-              <div class="flex items-center gap-2">
-                <input id="edit-prep-${escapeHtml(recipe.id)}" type="text" value="${escapeHtml((recipe.prep || []).join(', '))}" class="flex-1 min-h-[40px] px-2.5 py-1.5 rounded-lg bg-bg border border-border text-xs text-zinc-100">
-                <button id="btn-ai-prep-${escapeHtml(recipe.id)}" onclick="generateSmartPrepForForm('${escapeHtml(recipe.id)}')" class="min-h-[40px] px-3 py-1.5 rounded-lg bg-pastel-dim border border-pastel-border text-pastel-light hover:bg-pastel/20 font-medium text-xs transition shrink-0" title="Analyze ingredients & steps to generate Sunday prep tasks">✨ Auto-Prep</button>
+
+              <!-- Edit Ingredients Top-to-Bottom List -->
+              <div class="bg-bg/50 border border-border rounded-xl p-3 space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-semibold text-pastel-light">🛒 Ingredients</span>
+                  <button type="button" onclick="addFormListRow('edit-ingredients-list-${rid}', 'ingredient')" class="min-h-[32px] px-2.5 py-1 rounded-lg bg-pastel-dim border border-pastel-border text-pastel-light text-xs font-medium">+ Add Ingredient</button>
+                </div>
+                <div id="edit-ingredients-list-${rid}" class="space-y-2">
+                  ${((recipe.ingredients && recipe.ingredients.length) ? recipe.ingredients : ['']).map((ing, i) => createDynamicRowHtml('ingredient', ing, i)).join('')}
+                </div>
               </div>
-              <textarea id="edit-instructions-${escapeHtml(recipe.id)}" rows="3" class="w-full px-2.5 py-2 rounded-lg bg-bg border border-border text-xs text-zinc-100">${escapeHtml(instructionsText)}</textarea>
-              <div class="flex justify-end gap-2">
-                <button onclick="saveEditedRecipe('${escapeHtml(recipe.id)}')" class="min-h-[40px] px-4 py-2 rounded-lg bg-pastel text-zinc-950 font-semibold text-xs">✓ Save Changes</button>
+
+              <!-- Edit Prep Top-to-Bottom List -->
+              <div class="bg-bg/50 border border-border rounded-xl p-3 space-y-2">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <span class="text-xs font-semibold text-pastel-light">🔪 Sunday Prep Tasks</span>
+                  <div class="flex items-center gap-1.5">
+                    <button type="button" id="btn-ai-prep-${rid}" onclick="generateSmartPrepForForm('${rid}')" class="min-h-[32px] px-2.5 py-1 rounded-lg bg-pastel-dim border border-pastel-border text-pastel-light text-xs font-semibold">✨ Auto-Prep</button>
+                    <button type="button" onclick="addFormListRow('edit-prep-list-${rid}', 'prep')" class="min-h-[32px] px-2.5 py-1 rounded-lg bg-card border border-border text-zinc-300 text-xs">+ Add Task</button>
+                  </div>
+                </div>
+                <div id="edit-prep-list-${rid}" class="space-y-2">
+                  ${((recipe.prep && recipe.prep.length) ? recipe.prep : ['']).map((p, i) => createDynamicRowHtml('prep', p, i)).join('')}
+                </div>
+              </div>
+
+              <!-- Edit Cooking Steps Top-to-Bottom List -->
+              <div class="bg-bg/50 border border-border rounded-xl p-3 space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-semibold text-pastel-light">📖 Cooking Directions</span>
+                  <button type="button" onclick="addFormListRow('edit-instructions-list-${rid}', 'step')" class="min-h-[32px] px-2.5 py-1 rounded-lg bg-card border border-border text-zinc-300 text-xs">+ Add Step</button>
+                </div>
+                <div id="edit-instructions-list-${rid}" class="space-y-2">
+                  ${((recipe.instructions && recipe.instructions.length) ? recipe.instructions : ['']).map((st, i) => createDynamicRowHtml('step', st, i)).join('')}
+                </div>
+              </div>
+
+              <div class="flex justify-end gap-2 pt-1">
+                <button onclick="cancelEditRecipe()" class="min-h-[40px] px-3.5 py-2 rounded-lg bg-bg border border-border text-zinc-300 text-xs">Cancel</button>
+                <button onclick="saveEditedRecipe('${rid}')" class="min-h-[40px] px-4 py-2 rounded-lg bg-pastel text-zinc-950 font-semibold text-xs">✓ Save Changes</button>
               </div>
             </div>
           `;
@@ -2234,6 +2474,8 @@
           </div>
         `;
       }).join('');
+
+      requestAnimationFrame(() => autoResizeAllTextareas(container));
     }
 
     function startEditRecipe(id) { state.editingRecipeId = id; renderRecipesManager(); }
@@ -2251,9 +2493,14 @@
       const category = document.getElementById(`edit-category-${id}`).value.trim() || 'Custom';
       const cookTime = Number(document.getElementById(`edit-time-${id}`).value) || 30;
       const baseServings = Number(document.getElementById(`edit-servings-${id}`).value) || 4;
-      const ingredients = document.getElementById(`edit-ingredients-${id}`).value.split(',').map(s => s.trim()).filter(Boolean);
-      const prep = document.getElementById(`edit-prep-${id}`).value.split(',').map(s => s.trim()).filter(Boolean);
-      const instructions = document.getElementById(`edit-instructions-${id}`).value.split('\n').map(s => s.replace(/^\d+[\.\)]\s*/, '').trim()).filter(Boolean);
+      const ingredients = getFormListValues(`edit-ingredients-list-${id}`, true);
+      const prep = getFormListValues(`edit-prep-list-${id}`, false);
+      const instructions = getFormListValues(`edit-instructions-list-${id}`, false);
+
+      if (!name || ingredients.length === 0) {
+        showToast('Please provide a recipe name and at least 1 ingredient');
+        return;
+      }
 
       const updated = { ...state.recipes[idx], name, category, cookTime, baseServings, ingredients, prep, instructions };
       state.recipes[idx] = updated;
@@ -2269,32 +2516,29 @@
       const catEl = document.getElementById('input-recipe-category');
       const timeEl = document.getElementById('input-recipe-time');
       const servEl = document.getElementById('input-recipe-servings');
-      const ingEl = document.getElementById('input-recipe-ingredients');
-      const prepEl = document.getElementById('input-recipe-prep');
-      const instEl = document.getElementById('input-recipe-instructions');
 
       const name = nameEl.value.trim();
-      const ingredients = ingEl.value.split(',').map(s => s.trim()).filter(Boolean);
-      const prep = prepEl.value.split(',').map(s => s.trim()).filter(Boolean);
-      const instructions = instEl.value.split('\n').map(s => s.replace(/^\d+[\.\)]\s*/, '').trim()).filter(Boolean);
+      const ingredients = getFormListValues('new-ingredients-list', true);
+      const prep = getFormListValues('new-prep-list', false);
+      const instructions = getFormListValues('new-instructions-list', false);
 
       if (!name || ingredients.length === 0) {
-        showToast('Enter a recipe name and ingredients');
+        showToast('Enter a recipe name and at least 1 ingredient');
         return;
       }
 
       const newRec = {
         id: 'rec_' + Date.now(), name,
-        category: catEl.value || 'Custom',
+        category: catEl.value.trim() || 'Custom',
         cookTime: Number(timeEl.value) || 30,
         baseServings: Number(servEl.value) || 4,
         ingredients,
-        prep: prep.length ? prep : [`Prep ingredients for ${name}`],
+        prep: prep.length ? prep : generateCulinarySmartPrep(name, ingredients, instructions),
         instructions: instructions.length ? instructions : [`Cook ${name} and serve warm.`]
       };
 
       state.recipes.unshift(newRec);
-      nameEl.value = ''; ingEl.value = ''; prepEl.value = ''; instEl.value = '';
+      clearNewRecipeForm();
       saveState();
       renderAll();
       showToast('Added recipe');
@@ -2412,15 +2656,14 @@
     async function generateSmartPrepForForm(targetId) {
       const isNew = targetId === 'new';
       const nameEl = document.getElementById(isNew ? 'input-recipe-name' : `edit-name-${targetId}`);
-      const ingEl = document.getElementById(isNew ? 'input-recipe-ingredients' : `edit-ingredients-${targetId}`);
-      const prepEl = document.getElementById(isNew ? 'input-recipe-prep' : `edit-prep-${targetId}`);
-      const instEl = document.getElementById(isNew ? 'input-recipe-instructions' : `edit-instructions-${targetId}`);
+      const ingContainerId = isNew ? 'new-ingredients-list' : `edit-ingredients-list-${targetId}`;
+      const prepContainerId = isNew ? 'new-prep-list' : `edit-prep-list-${targetId}`;
+      const instContainerId = isNew ? 'new-instructions-list' : `edit-instructions-list-${targetId}`;
       const btn = document.getElementById(isNew ? 'btn-ai-prep-new' : `btn-ai-prep-${targetId}`);
 
-      if (!ingEl || !prepEl) return;
       const name = nameEl ? nameEl.value.trim() : 'Recipe';
-      const ingredients = ingEl.value.split(',').map(s => s.trim()).filter(Boolean);
-      const instructions = instEl ? instEl.value.split('\n').map(s => s.trim()).filter(Boolean) : [];
+      const ingredients = getFormListValues(ingContainerId, true);
+      const instructions = getFormListValues(instContainerId, false);
 
       if (ingredients.length === 0 && instructions.length === 0) {
         showToast('Enter ingredients or cooking steps first');
@@ -2458,7 +2701,7 @@ Cooking Steps: ${instructions.join(' | ')}`;
 
         const usedGemini = Array.isArray(aiTasks) && aiTasks.length > 0;
         const finalTasks = usedGemini ? aiTasks : generateCulinarySmartPrep(name, ingredients, instructions);
-        prepEl.value = finalTasks.join(', ');
+        setFormListRows(prepContainerId, 'prep', finalTasks);
         showToast(usedGemini ? `✨ Gemini generated ${finalTasks.length} prep tasks!` : `Generated ${finalTasks.length} smart prep tasks!`);
       } finally {
         if (btn) btn.textContent = origText;
@@ -2492,31 +2735,54 @@ Cooking Steps: ${instructions.join(' | ')}`;
             const str = (item.str || '').trim();
             if (!str) return;
             const y = Math.round(item.transform[5]);
+            const x = Math.round(item.transform[4]);
+            const fontHeight = Math.round(Math.abs(item.transform[3] || item.height || 12));
             let bucket = lineBuckets.find(b => Math.abs(b.y - y) <= 4);
             if (!bucket) {
-              bucket = { y, parts: [] };
+              bucket = { y, maxFont: fontHeight, parts: [] };
               lineBuckets.push(bucket);
+            } else if (fontHeight > bucket.maxFont) {
+              bucket.maxFont = fontHeight;
             }
-            bucket.parts.push({ x: item.transform[4], text: str });
+            bucket.parts.push({ x, width: item.width || (str.length * 5), text: str });
           });
 
           lineBuckets.sort((a, b) => b.y - a.y);
           lineBuckets.forEach(b => {
             b.parts.sort((a, c) => a.x - c.x);
-            const lineText = b.parts.map(p => p.text).join(' ').replace(/\s+/g, ' ').trim();
-            if (lineText) allLines.push(lineText);
+            // Detect side-by-side columns on the same Y coordinate (large horizontal gap > 45pt)
+            const segments = [];
+            let currentSeg = [];
+            let lastRightEdge = null;
+            b.parts.forEach(p => {
+              if (lastRightEdge !== null && (p.x - lastRightEdge) > 45) {
+                segments.push(currentSeg.join(' ').replace(/\s+/g, ' ').trim());
+                currentSeg = [p.text];
+              } else {
+                currentSeg.push(p.text);
+              }
+              lastRightEdge = p.x + (p.width || 20);
+            });
+            if (currentSeg.length > 0) {
+              segments.push(currentSeg.join(' ').replace(/\s+/g, ' ').trim());
+            }
+            segments.filter(Boolean).forEach(segText => {
+              allLines.push({ text: segText, fontSize: b.maxFont || 12, page: pageNum });
+            });
           });
         }
 
         let parsed = null;
-        const rawPdfText = allLines.join('\n').slice(0, 12000);
+        const rawPdfText = allLines.map(l => typeof l === 'string' ? l : l.text).join('\n').slice(0, 12000);
 
         // Try Gemini AI structured recipe + Sunday prep extraction first
         const pdfPrompt = `Extract this recipe PDF text into structured JSON.
-Rules:
-- Convert any ingredient fractions (like 1/2, ¼, 1 1/2) into decimals (0.5, 0.25, 1.5) at the start of each ingredient string (e.g., "1.5 lbs chicken breast", "2 crowns broccoli"). Do not use commas inside an individual ingredient string.
-- Category should be one of: Poultry, Beef, Seafood, Pasta, Vegetarian, or Dinner.
-- Generate 3 to 4 practical Sunday meal-prep tasks in "prep" based on the ingredients and cooking steps.
+Strict Classification Rules:
+- "name": The dish title ONLY (never a section header, website URL, or author name).
+- "ingredients": ONLY physical food ingredients with their measurements. Convert any fractions (like 1/2, ¼, 1 1/2) into decimals (0.5, 0.25, 1.5) at the start of each ingredient string (e.g., "1.5 lbs chicken breast", "2 crowns broccoli"). Never put cooking directions in ingredients, and do not use commas inside an individual ingredient string.
+- "instructions": Complete step-by-step cooking directions in chronological order. Merge wrapped lines that belong to the same sentence.
+- "prep": 3 to 4 practical Sunday advance meal-prep tasks based on the ingredients and cooking steps.
+- "category": One of Poultry, Beef, Seafood, Pasta, Vegetarian, or Dinner.
 PDF Text:
 ${rawPdfText}`;
 
@@ -2534,7 +2800,7 @@ ${rawPdfText}`;
           propertyOrdering: ["name", "category", "cookTime", "baseServings", "ingredients", "prep", "instructions"]
         };
 
-        if (btn) btn.textContent = '✨ Gemini parsing...';
+        if (btn) btn.textContent = '✨ Parsing PDF...';
         const directPdfAi = await callGeminiDirectJson(pdfPrompt, geminiSchema);
         if (directPdfAi && directPdfAi.name && Array.isArray(directPdfAi.ingredients) && directPdfAi.ingredients.length > 0) {
           parsed = directPdfAi;
@@ -2556,11 +2822,12 @@ ${rawPdfText}`;
         document.getElementById('input-recipe-category').value = parsed.category || 'Dinner';
         document.getElementById('input-recipe-time').value = Number(parsed.cookTime) || 30;
         document.getElementById('input-recipe-servings').value = Number(parsed.baseServings) || 4;
-        document.getElementById('input-recipe-ingredients').value = (parsed.ingredients || []).join(', ');
-        document.getElementById('input-recipe-prep').value = (parsed.prep || []).join(', ');
-        document.getElementById('input-recipe-instructions').value = (parsed.instructions || []).join('\n');
 
-        showToast(usedGemini ? `✨ Gemini imported "${parsed.name}"!` : `Imported "${parsed.name}" — review & tap + Add Recipe`);
+        setFormListRows('new-ingredients-list', 'ingredient', parsed.ingredients || []);
+        setFormListRows('new-prep-list', 'prep', parsed.prep || []);
+        setFormListRows('new-instructions-list', 'step', parsed.instructions || []);
+
+        showToast(usedGemini ? `✨ Gemini imported "${parsed.name}"!` : `Imported "${parsed.name}" — review rows & tap + Save Recipe`);
       } catch (err) {
         showToast('PDF import error: ' + (err.message || 'Could not read PDF'));
       } finally {
@@ -2569,27 +2836,57 @@ ${rawPdfText}`;
       }
     }
 
-    function parseRecipeFromPdfLines(lines, fallbackFilename) {
+    function normalizeFractionString(str) {
+      let s = String(str || '')
+        .replace(/¼/g, ' 1/4 ').replace(/½/g, ' 1/2 ').replace(/¾/g, ' 3/4 ')
+        .replace(/⅓/g, ' 1/3 ').replace(/⅔/g, ' 2/3 ')
+        .replace(/⅛/g, ' 0.13 ').replace(/⅜/g, ' 0.38 ').replace(/⅝/g, ' 0.63 ').replace(/⅞/g, ' 0.88 ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      // Convert mixed numbers like "1 1/2" or "2 1/4" at the start of the ingredient
+      s = s.replace(/^(\d+)\s+(\d+)\/(\d+)\b/, (_, whole, num, den) => {
+        const val = parseInt(whole, 10) + (parseInt(num, 10) / parseInt(den, 10));
+        return String(Math.round(val * 100) / 100);
+      });
+      // Convert simple fractions like "1/2" or "3/4" at the start of the ingredient
+      s = s.replace(/^(\d+)\/(\d+)\b/, (_, num, den) => {
+        const val = parseInt(num, 10) / parseInt(den, 10);
+        return String(Math.round(val * 100) / 100);
+      });
+      // Convert range like "1-2 lbs" or "1 to 2 cups" to the upper/average number so scaling works
+      s = s.replace(/^(\d+(?:\.\d+)?)\s*(?:\-|–|to)\s*(\d+(?:\.\d+)?)\b/i, '$2');
+      return s.replace(/,/g, ' -').replace(/\s+/g, ' ').trim();
+    }
+
+    function parseRecipeFromPdfLines(rawLineObjs, fallbackFilename) {
       const cleanFallback = String(fallbackFilename || 'Imported Recipe')
         .replace(/\.pdf$/i, '')
         .replace(/[-_]+/g, ' ')
         .trim();
 
+      const lineObjects = (rawLineObjs || []).map(item =>
+        typeof item === 'string' ? { text: item, fontSize: 12, page: 1 } : item
+      );
+      const lines = lineObjects.map(l => l.text);
       const fullText = lines.join('\n');
+
       let name = '';
       let baseServings = 4;
       let cookTime = 30;
 
-      const servMatch = fullText.match(/(?:servings?|serves|yield)\s*[:\-]?\s*(\d+)/i) ||
-                        fullText.match(/(\d+)\s+servings?/i);
+      // 1. Extract Servings
+      const servMatch = fullText.match(/(?:servings?|serves|yield|makes)\s*[:\-]?\s*(\d+)/i) ||
+                        fullText.match(/\b(\d+)\s+(?:servings?|portions?)\b/i);
       if (servMatch) {
         const s = parseInt(servMatch[1], 10);
         if (s >= 1 && s <= 24) baseServings = s;
       }
 
-      const hrMinMatch = fullText.match(/(?:total|cook|prep|time)[^.\n]{0,25}?(\d+)\s*(?:hr|hour)s?\s*(?:(\d+)\s*(?:min|minute|m)s?)?/i);
-      const minMatch = fullText.match(/(?:total\s*time|cook\s*time|active\s*time|time|ready\s*in)\s*[:\-]?\s*(\d+)\s*(?:min|minute|m)/i) ||
-                       fullText.match(/(\d+)\s*(?:mins?|minutes?)/i);
+      // 2. Extract Cook / Total Time
+      const hrMinMatch = fullText.match(/(?:total|cook|prep|active)?\s*time[^.\n]{0,20}?(\d+)\s*(?:hr|hour)s?\s*(?:(\d+)\s*(?:min|minute|m)s?)?/i);
+      const minMatch = fullText.match(/(?:total\s*time|cook\s*time|active\s*time|prep\s*time|ready\s*in|time)\s*[:\-]?\s*(\d+)\s*(?:min|minute|m)\b/i) ||
+                       fullText.match(/\b(\d+)\s*(?:mins?|minutes?)\b/i);
       if (hrMinMatch) {
         cookTime = (parseInt(hrMinMatch[1], 10) * 60) + (parseInt(hrMinMatch[2] || '0', 10));
       } else if (minMatch) {
@@ -2597,75 +2894,113 @@ ${rawPdfText}`;
         if (m >= 5 && m <= 360) cookTime = m;
       }
 
-      const ingredients = [];
-      const prep = [];
-      const instructions = [];
+      // 3. Identify Title using largest font on Page 1 (excluding generic headers)
+      const ingHeaderRx = /^(?:ingredients?|what you(?:'ll)? need|shopping list|for the [a-z\s]+)\s*:?$/i;
+      const prepHeaderRx = /^(?:sunday prep|meal prep|advance prep|prep(?:aration)?(?:\s+tasks|\s+steps)?|before you cook)\s*:?$/i;
+      const instHeaderRx = /^(?:instructions?|directions?|method|steps?|cooking\s+directions?|how to (?:make|prepare|cook)(?: it)?|preparation)\s*:?$/i;
+      const noiseRx = /^(?:servings?|serves|yield|makes|prep\s*time|cook\s*time|total\s*time|active\s*time|course|cuisine|category|calories|nutrition|author|source|page\s+\d+|https?:\/\/|www\.|print\b|save\b|rate\b|review)/i;
+
+      const qtyStartRx = /^(?:[\u2022\-\*\▪\◦\+]\s*)?(?:\d+(?:\.\d+)?|\d+\/\d+|\d+\s+\d+\/\d+|[¼½¾⅓⅔⅛⅜⅝⅞]|one|two|three|four|half|a\s+pinch|pinch\s+of|salt\s+and\s+pepper|to\s+taste|cooking\s+spray)\b/i;
+      const unitWordRx = /\b(?:lbs?|pounds?|oz|ounces?|cups?|tbsp|tablespoons?|tsp|teaspoons?|cloves?|cans?|crowns?|bunch(?:es)?|pints?|quarts?|fillets?|large|medium|small|g|grams?|kg|ml|liters?|packages?|pkg|stalks?|heads?|pieces?|slices?|pinch(?:es)?|dash(?:es)?|handfuls?|containers?|jars?|bottles?|sprigs?)\b/i;
+      const cookVerbStartRx = /^(?:step\s*\d+[\.\):]?\s*)?(?:preheat|heat|warm|melt|bring|boil|simmer|cook|sear|sauté|saute|brown|fry|stir-fry|roast|bake|broil|grill|steam|blanch|whisk|stir|mix|combine|toss|add|pour|transfer|remove|place|arrange|spread|layer|top|garnish|serve|season|marinate|drain|rinse|pat|chop|dice|mince|slice|cut|peel|grate|divide|assemble|let|allow|cover|reduce|turn|flip|meanwhile|in\s+a\s+(?:large|medium|small|bowl|skillet|pan|pot|oven|blender|food\s+processor))\b/i;
+
+      const firstPageCandidates = lineObjects
+        .slice(0, 18)
+        .filter(l => l.page === 1 && l.text.length >= 4 && l.text.length <= 75)
+        .filter(l => !ingHeaderRx.test(l.text) && !prepHeaderRx.test(l.text) && !instHeaderRx.test(l.text) && !noiseRx.test(l.text) && !qtyStartRx.test(l.text));
+
+      if (firstPageCandidates.length > 0) {
+        const sortedByFont = [...firstPageCandidates].sort((a, b) => (b.fontSize || 12) - (a.fontSize || 12));
+        name = sortedByFont[0].text.replace(/^recipe\s*[:\-]\s*/i, '').trim();
+      }
+
+      const rawIngredients = [];
+      const rawPrep = [];
+      const rawInstructions = [];
       let section = 'header';
 
-      const ingHeaderRx = /^(?:ingredients?|what you(?:'ll)? need|shopping list)\s*:?$/i;
-      const prepHeaderRx = /^(?:sunday prep|meal prep|prep(?:aration)?(?:\s+tasks|\s+steps)?|before you cook)\s*:?$/i;
-      const instHeaderRx = /^(?:instructions?|directions?|method|steps?|preparation\s+and\s+cooking|how to make(?: it)?)\s*:?$/i;
-      const skipMetaRx = /^(?:servings?|serves|yield|prep\s*time|cook\s*time|total\s*time|active\s*time|course|cuisine|category|calories|author|source|page\s+\d+)/i;
-      const qtyLineRx = /^(?:[\u2022\-\*\▪\◦]\s*)?(?:\d+(?:\.\d+)?|\d+\/\d+|\d+\s+\d+\/\d+|[¼½¾⅓⅔⅛⅜⅝⅞])\s*(?:lbs?|pounds?|oz|ounces?|cups?|tbsp|tablespoons?|tsp|teaspoons?|cloves?|cans?|crowns?|bunch(?:es)?|pints?|fillets?|large|medium|small|g|kg|ml|l|packages?|pkg|stalks?|heads?|pieces?|slices?)?\b/i;
+      const isLikelyIngredientLine = (str) => {
+        if (str.length > 95) return false;
+        if (cookVerbStartRx.test(str) && str.length > 45) return false;
+        if (qtyStartRx.test(str) && (unitWordRx.test(str) || str.length < 55)) return true;
+        if (/^(?:salt|kosher salt|sea salt|black pepper|olive oil|vegetable oil|butter|cooking spray|water|fresh\s+[a-z]+)\b/i.test(str) && str.length < 55) return true;
+        return false;
+      };
+
+      const isNumberedStep = (str) => /^(?:step\s*\d+[\.\):]?|\d+[\.\)])\s+[A-Z]/i.test(str);
 
       for (let i = 0; i < lines.length; i++) {
         const raw = lines[i].trim();
         if (!raw) continue;
+        if (name && raw === name) continue;
 
-        if (ingHeaderRx.test(raw)) { section = 'ingredients'; continue; }
+        // Check section headers
+        if (/^(?:ingredients?|what you(?:'ll)? need|shopping list)\s*:?$/i.test(raw)) { section = 'ingredients'; continue; }
         if (prepHeaderRx.test(raw)) { section = 'prep'; continue; }
         if (instHeaderRx.test(raw)) { section = 'instructions'; continue; }
+        if (/^(?:notes?|nutrition(?:\s+facts|\s+information)?|chef(?:'s)?\s+notes?|tips?)\s*:?$/i.test(raw)) { section = 'notes'; continue; }
 
-        if (!name && section === 'header' && !skipMetaRx.test(raw) && raw.length > 2 && raw.length <= 85 && !qtyLineRx.test(raw)) {
-          name = raw.replace(/^recipe\s*[:\-]\s*/i, '').trim();
-          continue;
-        }
+        // Skip subheaders like "For the Sauce:"
+        if (/^for the [a-z\s]+\s*:$/i.test(raw) && raw.length < 35) continue;
+        if (noiseRx.test(raw) && raw.length < 60) continue;
 
-        if (skipMetaRx.test(raw) && raw.length < 45) continue;
-
-        const cleanItem = raw
+        const cleanLine = raw
           .replace(/^[\u2022\-\*\▪\◦\+]\s*/, '')
           .replace(/^(?:step\s*)?\d+[\.\)]\s*/i, '')
           .trim();
-        if (!cleanItem) continue;
+        if (!cleanLine) continue;
 
         if (section === 'ingredients') {
-          ingredients.push(cleanItem);
+          // If the PDF switched to instructions without a header
+          if ((isNumberedStep(raw) || cookVerbStartRx.test(cleanLine)) && raw.length > 60 && !qtyStartRx.test(raw)) {
+            section = 'instructions';
+            rawInstructions.push(cleanLine);
+          } else if (!qtyStartRx.test(raw) && rawIngredients.length > 0 && /^[a-z\(]/.test(cleanLine) && cleanLine.length < 45) {
+            // Wrapped continuation of previous ingredient line (e.g., "boneless, skinless" or "(optional)")
+            rawIngredients[rawIngredients.length - 1] += ' ' + cleanLine;
+          } else {
+            rawIngredients.push(cleanLine);
+          }
         } else if (section === 'prep') {
-          prep.push(cleanItem);
+          rawPrep.push(cleanLine);
         } else if (section === 'instructions') {
-          instructions.push(cleanItem);
-        } else {
-          if (qtyLineRx.test(raw) && raw.length < 90) {
-            ingredients.push(cleanItem);
-          } else if (/^(?:step\s*\d+|\d+[\.\)]\s+[A-Z])/i.test(raw) || raw.length > 75) {
-            instructions.push(cleanItem);
+          // If a new numbered step or starts after a period, start a new step; otherwise merge wrapped PDF lines
+          const startsNewStep = isNumberedStep(raw) || /^[\u2022\-\*\▪\◦]\s+/.test(raw);
+          const prevStep = rawInstructions.length > 0 ? rawInstructions[rawInstructions.length - 1] : '';
+          const prevEndedSentence = /[\.\!\?\"\']$/.test(prevStep);
+
+          if (!startsNewStep && prevStep && (!prevEndedSentence || /^[a-z]/.test(cleanLine))) {
+            rawInstructions[rawInstructions.length - 1] += ' ' + cleanLine;
+          } else if (isLikelyIngredientLine(raw) && rawInstructions.length === 0) {
+            rawIngredients.push(cleanLine);
+          } else {
+            rawInstructions.push(cleanLine);
+          }
+        } else if (section !== 'notes') {
+          // Unlabeled section: classify intelligently
+          if (isLikelyIngredientLine(raw)) {
+            rawIngredients.push(cleanLine);
+          } else if (isNumberedStep(raw) || (cookVerbStartRx.test(cleanLine) && cleanLine.length > 25) || cleanLine.length > 75) {
+            section = 'instructions';
+            rawInstructions.push(cleanLine);
           }
         }
       }
 
-      const normalizedIngredients = ingredients.map(ing =>
-        ing
-          .replace(/¼/g, '0.25').replace(/½/g, '0.5').replace(/¾/g, '0.75')
-          .replace(/⅓/g, '0.33').replace(/⅔/g, '0.67')
-          .replace(/(\d+)\s+1\/2\b/g, '$1.5')
-          .replace(/(\d+)\s+1\/4\b/g, '$1.25')
-          .replace(/(\d+)\s+3\/4\b/g, '$1.75')
-          .replace(/\b1\/2\b/g, '0.5')
-          .replace(/\b1\/4\b/g, '0.25')
-          .replace(/\b3\/4\b/g, '0.75')
-          .replace(/\b1\/3\b/g, '0.33')
-          .replace(/\b2\/3\b/g, '0.67')
-          .replace(/,/g, ' -')
-          .trim()
-      ).filter(Boolean);
+      const normalizedIngredients = rawIngredients
+        .map(ing => normalizeFractionString(ing))
+        .filter(ing => ing.length >= 2 && !/^(?:ingredients?|instructions?|directions?)$/i.test(ing));
 
-      if (prep.length === 0 && normalizedIngredients.length > 0) {
-        const smartTasks = generateCulinarySmartPrep(name || cleanFallback, normalizedIngredients, instructions);
-        smartTasks.forEach(t => prep.push(t));
+      const cleanedInstructions = rawInstructions
+        .map(step => step.replace(/\s+/g, ' ').trim())
+        .filter(step => step.length >= 5);
+
+      if (rawPrep.length === 0 && normalizedIngredients.length > 0) {
+        const smartTasks = generateCulinarySmartPrep(name || cleanFallback, normalizedIngredients, cleanedInstructions);
+        smartTasks.forEach(t => rawPrep.push(t));
       }
 
-      const combinedLower = (name + ' ' + normalizedIngredients.join(' ')).toLowerCase();
+      const combinedLower = ((name || '') + ' ' + normalizedIngredients.join(' ')).toLowerCase();
       let category = 'Dinner';
       if (/(chicken|turkey|poultry)/.test(combinedLower)) category = 'Poultry';
       else if (/(beef|steak|sirloin|flank|brisket|chuck)/.test(combinedLower)) category = 'Beef';
@@ -2679,8 +3014,8 @@ ${rawPdfText}`;
         cookTime,
         baseServings,
         ingredients: normalizedIngredients,
-        prep: prep.length ? prep : [`Prep ingredients for ${name || cleanFallback}`],
-        instructions: instructions.length ? instructions : [`Follow PDF instructions for ${name || cleanFallback}.`]
+        prep: rawPrep.length ? rawPrep : [`Prep ingredients for ${name || cleanFallback}`],
+        instructions: cleanedInstructions.length ? cleanedInstructions : [`Follow PDF instructions for ${name || cleanFallback}.`]
       };
     }
 
