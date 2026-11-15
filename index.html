@@ -3677,8 +3677,24 @@ ${rawPdfText}`;
         };
       });
 
-      const { visibleItems } = buildConsolidatedGroceryItems();
-      const groceries = visibleItems.map(i => ({ text: i.displayText, day: i.daysLabel, mealName: i.mealsLabel }));
+      const { visibleItems, hiddenStaples } = buildConsolidatedGroceryItems();
+      const nonStapleItems = visibleItems.filter(i => !i.isStaple);
+      const allStapleItems = [...visibleItems.filter(i => i.isStaple), ...hiddenStaples];
+
+      const groceries = nonStapleItems.map(i => ({
+        text: i.displayText,
+        day: i.daysLabel,
+        mealName: i.mealsLabel,
+        aisle: i.aisle,
+        isStaple: false
+      }));
+      const stapleGroceries = allStapleItems.map(i => ({
+        text: i.displayText,
+        day: i.daysLabel,
+        mealName: i.mealsLabel,
+        aisle: i.aisle,
+        isStaple: true
+      }));
       const prepGroups = buildCategorizedPrepGroups();
 
       return {
@@ -3691,8 +3707,41 @@ ${rawPdfText}`;
         scheduleSnapshot: { ...state.schedule },
         scheduleSummary,
         groceries,
+        stapleGroceries,
         prepGroups
       };
+    }
+
+    function getHistoryPlanGroceriesAndPrep(plan) {
+      let rawGroceries = Array.isArray(plan.groceries) ? plan.groceries : [];
+      let groceries = rawGroceries.filter(g => !g.isStaple);
+      let stapleGroceries = Array.isArray(plan.stapleGroceries)
+        ? plan.stapleGroceries
+        : rawGroceries.filter(g => g.isStaple);
+      let prepGroups = Array.isArray(plan.prepGroups) ? plan.prepGroups : [];
+
+      if (prepGroups.length === 0 && Array.isArray(plan.scheduleSummary)) {
+        const catMap = new Map();
+        PREP_CATEGORY_ORDER.forEach(c => catMap.set(c, []));
+        plan.scheduleSummary.forEach(slot => {
+          if (slot.mode === 'Reheat Leftovers') return;
+          const rec = state.recipes.find(r => String(r.id) === String(slot.recipeId)) ||
+                      state.recipes.find(r => String(r.name).toLowerCase() === String(slot.mealName).toLowerCase()) ||
+                      DEFAULT_RECIPES.find(r => String(r.name).toLowerCase() === String(slot.mealName).toLowerCase());
+          if (!rec) return;
+          (rec.prep || []).forEach(task => {
+            const cat = classifyPrepTask(task);
+            if (!catMap.has(cat)) catMap.set(cat, []);
+            catMap.get(cat).push({ task, mealName: rec.name });
+          });
+        });
+        PREP_CATEGORY_ORDER.forEach(cat => {
+          const items = catMap.get(cat) || [];
+          if (items.length > 0) prepGroups.push({ category: cat, tasks: items });
+        });
+      }
+
+      return { groceries, stapleGroceries, prepGroups };
     }
 
     function getHistoryPlanGroceriesAndPrep(plan) {
@@ -3809,7 +3858,7 @@ ${rawPdfText}`;
 
       container.innerHTML = list.map(plan => {
         const isExpanded = !!(state.expandedHistoryIds && state.expandedHistoryIds[plan.id]);
-        const { groceries, prepGroups } = getHistoryPlanGroceriesAndPrep(plan);
+        const { groceries, stapleGroceries, prepGroups } = getHistoryPlanGroceriesAndPrep(plan);
         const totalPrepCount = prepGroups.reduce((acc, g) => acc + (g.tasks || []).length, 0);
 
         return `
@@ -3857,12 +3906,12 @@ ${rawPdfText}`;
 
             ${isExpanded ? `
               <div class="pt-2.5 border-t border-border grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <div class="bg-bg border border-border rounded-xl p-3 space-y-2">
+                <div class="bg-bg border border-border rounded-xl p-3 space-y-2.5">
                   <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-mono uppercase tracking-wider text-pastel-light font-semibold">🛒 Grocery List (${groceries.length})</span>
+                    <span class="text-[11px] font-mono uppercase tracking-wider text-pastel-light font-semibold">🛒 Groceries to Buy (${groceries.length})</span>
                   </div>
                   ${groceries.length > 0 ? `
-                    <ul class="space-y-1.5 max-h-60 overflow-y-auto pr-1 text-zinc-200">
+                    <ul class="space-y-1.5 max-h-48 overflow-y-auto pr-1 text-zinc-200">
                       ${groceries.map(g => `
                         <li class="flex items-start justify-between gap-2 border-b border-border/50 pb-1">
                           <span>• ${escapeHtml(formatIngredientForDisplay(g.text))}</span>
@@ -3870,7 +3919,21 @@ ${rawPdfText}`;
                         </li>
                       `).join('')}
                     </ul>
-                  ` : `<p class="text-zinc-500 italic">No grocery items recorded.</p>`}
+                  ` : `<p class="text-zinc-500 italic">No non-staple grocery items recorded.</p>`}
+
+                  ${stapleGroceries && stapleGroceries.length > 0 ? `
+                    <div class="pt-2 border-t border-border/60 space-y-1.5">
+                      <span class="text-[10px] font-mono uppercase tracking-wider text-amber-300 font-semibold block">🥫 Pantry Staples (${stapleGroceries.length})</span>
+                      <ul class="space-y-1 max-h-32 overflow-y-auto pr-1 text-zinc-300">
+                        ${stapleGroceries.map(g => `
+                          <li class="flex items-start justify-between gap-2 text-[11px]">
+                            <span>• ${escapeHtml(formatIngredientForDisplay(g.text))}</span>
+                            <span class="text-[10px] font-mono text-zinc-500 shrink-0">${escapeHtml(g.day || '')}</span>
+                          </li>
+                        `).join('')}
+                      </ul>
+                    </div>
+                  ` : ''}
                 </div>
 
                 <div class="bg-bg border border-border rounded-xl p-3 space-y-2">
